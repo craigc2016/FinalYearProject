@@ -45,7 +45,7 @@
         android:layout_height="wrap_content"
         android:layout_alignEnd="@+id/editPass"
         android:layout_alignTop="@+id/btnSignIn"
-        android:text="Clear" />
+        android:text="Cancel" />
 
     <TextView
         android:id="@+id/txtMsg"
@@ -54,6 +54,9 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="42dp"
-        android:text="Register Account"
-        android:textSize="24sp" />
+        android:text="Go Back To Login"
+        android:textSize="24sp"
+        tools:text="Go Back To Login" />
+
 </RelativeLayout>
+
