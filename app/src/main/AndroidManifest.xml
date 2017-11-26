@@ -16,7 +16,12 @@
             </intent-filter>
         </activity>
         <activity android:name=".RegisterActivity" />
-        <activity android:name=".HomeActivity"></activity>
+        <activity android:name=".HomeActivity" />
+        <activity
+            android:name=".UploadActivity"
+            android:label="@string/title_activity_upload">
+
+        </activity>
     </application>
 
 </manifest>
