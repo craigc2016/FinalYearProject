@@ -101,7 +101,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         progressDialog.dismiss();
                         if(task.isSuccessful()){
-                            HomeScreen();
+                            MapScreen();
                         }else {
                             Toast.makeText(getApplicationContext(), "ERROR USER NOT FOUND PLEASE TRY AGAIN!",Toast.LENGTH_SHORT).show();
                         }
@@ -121,9 +121,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         finish();
     }
 
-    private void HomeScreen(){
-        startActivity(new Intent(this,HomeActivity.class));
+    private void MapScreen(){
+        startActivity(new Intent(this,MapsActivity.class));
         finish();
     }
+
 
 }
