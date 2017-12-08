@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <item android:id="@+id/action_getCurrentPosition"
+        android:title="@string/action_getCurrentPosition"
+        android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_address"
+        android:title="@string/action_address"
+        android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_5KM"
+        android:title="@string/action_5KM"
+        android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_10KM"
+        android:title="@string/action_10KM"
+        android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_15KM"
+        android:title="@string/action_15KM"
+        android:orderInCategory="100" app:showAsAction="never" />
+
+</menu>

@@ -11,11 +11,7 @@ public class MyGeoLocation {
 
     public MyGeoLocation(){}
 
-    public MyGeoLocation(String key,double lat,double lon){
-        this.key = key;
-        this.lat = lat;
-        this.lon = lon;
-    }
+
 
     public String getKey() {
         return key;
@@ -39,5 +35,9 @@ public class MyGeoLocation {
 
     public void setLon(double lon) {
         this.lon = lon;
+    }
+
+    public String toString(){
+        return "ADDRESS " + key + "\nLATITUDE : " + lat + "\nLONGITUDE : " + lon;
     }
 }
