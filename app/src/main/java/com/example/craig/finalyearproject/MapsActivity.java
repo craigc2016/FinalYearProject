@@ -166,6 +166,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 cordinList.add(gl);
                 arrayAdapter.notifyDataSetChanged();
                 moveMap();
+
             }
 
             @Override
