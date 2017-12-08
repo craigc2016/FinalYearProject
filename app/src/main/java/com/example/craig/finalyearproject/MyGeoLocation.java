@@ -38,6 +38,6 @@ public class MyGeoLocation {
     }
 
     public String toString(){
-        return "ADDRESS " + key + "\nLATITUDE : " + lat + "\nLONGITUDE : " + lon;
+        return "ADDRESS " + key + "\nLATITUDE : " + lat + "\nLONGITUDE : " + lon ;
     }
 }

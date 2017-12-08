@@ -2,6 +2,7 @@
     <string name="app_name">FinalYearProject</string>
     <string name="title_activity_upload">UploadActivity</string>
     <string name="title_activity_maps">Map</string>
+
     <string name="action_address">Add Address</string>
     <string name="action_5KM">5KM</string>
     <string name="action_10KM">10KM</string>

@@ -23,6 +23,7 @@ public class AddressDialog extends AppCompatDialogFragment {
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.layout_dialog,null);
         addText = (EditText) view.findViewById(R.id.editAddress);
+
         builder.setView(view)
                 .setTitle("Add Address")
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
