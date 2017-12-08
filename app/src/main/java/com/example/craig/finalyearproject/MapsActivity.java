@@ -2,6 +2,7 @@ package com.example.craig.finalyearproject;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -11,6 +12,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -25,6 +28,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -36,18 +42,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener {
-
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener, ListView.OnItemClickListener {
+    private int num =0;
     private GoogleMap map;
     private Location mlocation;
     private double lat;
     private double lon;
+    private String currentPosName;
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference ref;
     private ArrayList cordinList;
     private ListView listView;
     private ArrayAdapter arrayAdapter;
     private double radius;
+    private Polyline line=null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,6 +66,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         listView = (ListView) findViewById(R.id.list);
+        cordinList = new ArrayList();
+        listView.setOnItemClickListener(this);
         getCurrentLocation();
     }
 
@@ -74,9 +84,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        // Add a marker in Sydney and move the camera
-        LatLng dublin = new LatLng(lat , lon);
-        map.addMarker(new MarkerOptions().position(dublin).title("Marker in Dublin"));
+        // Add a marker for your current loction
+        LatLng dublin = new LatLng(lat ,lon);
+        map.addMarker(new MarkerOptions().position(dublin).title("Current Location"));
         map.moveCamera(CameraUpdateFactory.newLatLng(dublin));
         map.animateCamera(CameraUpdateFactory.zoomTo(15));
     }
@@ -102,8 +112,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.addMarker(new MarkerOptions()
                 .position(latLng) //setting position
                 .draggable(true) //Making the marker draggable
-                .title("Current Location")); //Adding a title
-
+                .title(currentPosName)); //Adding a title
 
         //Moving the camera
         map.moveCamera(CameraUpdateFactory.newLatLng(latLng));
@@ -124,21 +133,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
+        checkListSize();
         if(id == R.id.action_getCurrentPosition){
             getCurrentLocation();
             moveMap();
+            checkMap();
         }
         if (id == R.id.action_address) {
             openDialog();
+            checkMap();
         }
         if(id == R.id.action_5KM){
             setUpDoubleValue(item.toString());
             setUpFireBase();
+            Toast.makeText(this,"list size" + cordinList.size()+ "num " + num,Toast.LENGTH_LONG).show();
         }
         if(id == R.id.action_10KM){
             setUpDoubleValue(item.toString());
             setUpFireBase();
+            //Toast.makeText(this,"list size" + getListSize()+ "num " + num,Toast.LENGTH_LONG).show();
         }
         if(id == R.id.action_15KM){
             setUpDoubleValue(item.toString());
@@ -151,22 +164,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void setUpFireBase(){
         firebaseDatabase = FirebaseDatabase.getInstance();
         ref = firebaseDatabase.getReference("Geo Locations");
-        cordinList = new ArrayList();
         GeoFire geoFire = new GeoFire(ref);
-        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(lat,lon),radius);
+        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(mlocation.getLatitude(),mlocation.getLongitude()),radius);
         arrayAdapter = new ArrayAdapter(getBaseContext(),android.R.layout.simple_list_item_1,cordinList);
         listView.setAdapter(arrayAdapter);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-                MyGeoLocation gl = new MyGeoLocation();
-                gl.setKey(key);
-                gl.setLat(lat);
-                gl.setLon(lon);
-                cordinList.add(gl);
+                MyGeoLocation geoLocation = new MyGeoLocation();
+                lat = location.latitude;
+                lon = location.longitude;
+                geoLocation.setKey(key);
+                geoLocation.setLat(lat);
+                geoLocation.setLon(lon);
+                cordinList.add(geoLocation);
                 arrayAdapter.notifyDataSetChanged();
-                moveMap();
-
+                currentPosName = key;
+                num = cordinList.size();
             }
 
             @Override
@@ -234,6 +248,32 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         String newItem[];
         newItem = item.split("K",2);
         radius = Double.parseDouble(newItem[0].toString());
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        checkMap();
+        MyGeoLocation geoLocation = (MyGeoLocation) listView.getItemAtPosition(position);
+        lat = geoLocation.getLat();
+        lon = geoLocation.getLon();
+        line = map.addPolyline(new PolylineOptions()
+                .add(new LatLng(lat, lon), new LatLng(mlocation.getLatitude(), mlocation.getLongitude()))
+                .width(5)
+                .color(Color.RED));
+        moveMap();
+    }
+
+    public void checkMap(){
+        if(map != null){
+            map.clear();
+        }
+    }
+
+    public void checkListSize(){
+        if(cordinList.size() > 0){
+            cordinList.clear();
+            arrayAdapter.notifyDataSetChanged();
+        }
     }
 }
 
