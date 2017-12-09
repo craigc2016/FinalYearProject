@@ -2,16 +2,13 @@ package com.example.craig.finalyearproject;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Activity;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -25,6 +22,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 public class UploadActivity extends AppCompatActivity implements View.OnClickListener{
     private Button chooseImg, uploadImg;
@@ -56,6 +54,11 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         fileName.setVisibility(View.INVISIBLE);
         username = (EditText) findViewById(R.id.username);
         username.setVisibility(View.INVISIBLE);
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setLogo(R.drawable.git);
+        actionBar.setDisplayUseLogoEnabled(true);
+        actionBar.setDisplayShowHomeEnabled(true);
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Uploading....");
@@ -91,8 +94,11 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
             name = fileName.getText().toString();
             getUserName = username.getText().toString();
             FirebaseUser UserID = FirebaseAuth.getInstance().getCurrentUser();
-            StorageReference childRef = storageReference.child(name+".jpg");
+            StorageReference r = storageReference.child(UserID.getUid());
+            StorageReference childRef = r.child(name+".jpg");
             UploadTask uploadTask = childRef.putFile(filePath);
+
+
             User user = new User(UserID.getUid(),getUserName,name);
             DatabaseReference newR = ref.child("User").push();
             newR.setValue(user);
@@ -118,14 +124,11 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             filePath = data.getData();
             try {
-                //getting image from gallery
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
-                //Setting image to ImageView
-                imgView.setImageBitmap(bitmap);
+                //Used to load the image using the picasso library
+                Picasso.with(this).load(filePath).into(imgView);
             } catch (Exception e) {
                 e.printStackTrace();
             }

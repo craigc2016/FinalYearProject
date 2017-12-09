@@ -16,6 +16,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.storage.UploadTask;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
     private EditText email;
@@ -101,7 +102,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         progressDialog.dismiss();
                         if(task.isSuccessful()){
-                            MapScreen();
+                            //MapScreen();
+                            UploadScreen();
                         }else {
                             Toast.makeText(getApplicationContext(), "ERROR USER NOT FOUND PLEASE TRY AGAIN!",Toast.LENGTH_SHORT).show();
                         }
@@ -123,6 +125,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     private void MapScreen(){
         startActivity(new Intent(this,MapsActivity.class));
+        finish();
+    }
+
+    private void UploadScreen(){
+        startActivity(new Intent(this,UploadActivity.class));
         finish();
     }
 

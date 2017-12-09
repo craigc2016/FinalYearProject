@@ -3,14 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.craig.finalyearproject.HomeActivity"
+    tools:context="com.example.craig.finalyearproject.UploadActivity"
     android:orientation="vertical">
 
     <ImageView
-        android:layout_width="200dp"
+        android:layout_width="300dp"
         android:layout_height="200dp"
         android:id="@+id/imgView"
-        android:layout_centerHorizontal="true"/>
+        android:layout_marginBottom="59dp"
+        android:layout_alignBottom="@+id/editName"
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:layout_width="match_parent"
@@ -32,10 +34,12 @@
         android:id="@+id/editName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/imgView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="31dp"
+        android:layout_above="@+id/username"
+        android:layout_alignEnd="@+id/imgView"
+        android:layout_alignStart="@+id/imgView"
+        android:layout_marginBottom="26dp"
         android:ems="10"
+        android:hint="FileName"
         android:inputType="textPersonName"
         android:text="FileName" />
 
@@ -43,11 +47,13 @@
         android:id="@+id/username"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="46dp"
+        android:layout_above="@+id/chooseImg"
+        android:layout_alignEnd="@+id/editName"
+        android:layout_alignStart="@+id/imgView"
+        android:layout_marginBottom="61dp"
         android:ems="10"
+        android:hint="Username"
         android:inputType="textPersonName"
-        android:text="Username"
-        android:layout_below="@+id/editName"
-        android:layout_alignEnd="@+id/imgView" />
+        android:text="Username" />
 </RelativeLayout>
 

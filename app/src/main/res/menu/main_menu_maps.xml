@@ -5,18 +5,18 @@
 
     <item android:id="@+id/action_getCurrentPosition"
         android:title="@string/action_getCurrentPosition"
-        android:orderInCategory="100" app:showAsAction="never" />
+        android:orderInCategory="101" app:showAsAction="never" />
     <item android:id="@+id/action_address"
         android:title="@string/action_address"
-        android:orderInCategory="100" app:showAsAction="never" />
+        android:orderInCategory="101" app:showAsAction="never" />
     <item android:id="@+id/action_5KM"
         android:title="@string/action_5KM"
-        android:orderInCategory="100" app:showAsAction="never" />
+        android:orderInCategory="101" app:showAsAction="never" />
     <item android:id="@+id/action_10KM"
         android:title="@string/action_10KM"
-        android:orderInCategory="100" app:showAsAction="never" />
+        android:orderInCategory="101" app:showAsAction="never" />
     <item android:id="@+id/action_15KM"
         android:title="@string/action_15KM"
-        android:orderInCategory="100" app:showAsAction="never" />
+        android:orderInCategory="101" app:showAsAction="never" />
 
 </menu>

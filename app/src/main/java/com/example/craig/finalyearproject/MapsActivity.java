@@ -28,15 +28,11 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,7 +64,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         listView = (ListView) findViewById(R.id.list);
         cordinList = new ArrayList();
         listView.setOnItemClickListener(this);
-        getCurrentLocation();
     }
 
 
@@ -84,24 +79,24 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        // Add a marker for your current loction
-        LatLng dublin = new LatLng(lat ,lon);
-        map.addMarker(new MarkerOptions().position(dublin).title("Current Location"));
-        map.moveCamera(CameraUpdateFactory.newLatLng(dublin));
-        map.animateCamera(CameraUpdateFactory.zoomTo(15));
+        getCurrentLocation();
     }
 
     private void getCurrentLocation(){
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(getApplicationContext(),"Error permissions not granted",Toast.LENGTH_LONG).show();
-            map.setMyLocationEnabled(true);
             return;
         }
         LocationManager locationManager = (LocationManager) getApplication().getSystemService(LOCATION_SERVICE);
         mlocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        lat = mlocation.getLatitude();
-        lon = mlocation.getLongitude();
+        // Add a marker for your current loction
+        LatLng dublin = new LatLng(mlocation.getLatitude() ,mlocation.getLongitude());
+        map.addMarker(new MarkerOptions().position(dublin).title("Current Location"));
+        map.moveCamera(CameraUpdateFactory.newLatLng(dublin));
+        map.animateCamera(CameraUpdateFactory.zoomTo(15));
+        //mlocation.getLatitude();
+        //mlocation.getLongitude();
     }
 
     private void moveMap() {
@@ -123,7 +118,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main_menu, menu);
+        getMenuInflater().inflate(R.menu.main_menu_maps, menu);
         return true;
     }
 
@@ -137,11 +132,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(id == R.id.action_getCurrentPosition){
             getCurrentLocation();
             moveMap();
-            checkMap();
+
         }
         if (id == R.id.action_address) {
             openDialog();
-            checkMap();
+
         }
         if(id == R.id.action_5KM){
             setUpDoubleValue(item.toString());
@@ -179,7 +174,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 geoLocation.setLon(lon);
                 cordinList.add(geoLocation);
                 arrayAdapter.notifyDataSetChanged();
-                currentPosName = key;
                 num = cordinList.size();
             }
 
@@ -252,21 +246,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        checkMap();
+        map.clear();
+        getCurrentLocation();
         MyGeoLocation geoLocation = (MyGeoLocation) listView.getItemAtPosition(position);
         lat = geoLocation.getLat();
         lon = geoLocation.getLon();
+        currentPosName = geoLocation.getKey();
         line = map.addPolyline(new PolylineOptions()
                 .add(new LatLng(lat, lon), new LatLng(mlocation.getLatitude(), mlocation.getLongitude()))
                 .width(5)
                 .color(Color.RED));
         moveMap();
-    }
-
-    public void checkMap(){
-        if(map != null){
-            map.clear();
-        }
     }
 
     public void checkListSize(){
