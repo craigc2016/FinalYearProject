@@ -82,6 +82,7 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         uploadImg.setOnClickListener(this);
 
     }
+
     public void setImageForToolBar(){
         ref.child("User").addValueEventListener(new ValueEventListener() {
             @Override
@@ -96,7 +97,7 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
                             @Override
                             public void onSuccess(Uri uri) {
                                 url = uri.toString();
-                                Picasso.with(UploadActivity.this).load(url).resize(50, 50).centerCrop().into(logo);
+                                Picasso.with(UploadActivity.this).load(url).resize(100, 100).centerCrop().into(logo);
                             }
                         });
                         break;

@@ -114,7 +114,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             @Override
                             public void onSuccess(Uri uri) {
                                 url = uri.toString();
-                                Picasso.with(MapsActivity.this).load(url).resize(50, 50).centerCrop().into(logo);
+                                Picasso.with(MapsActivity.this).load(url).resize(100,100).centerCrop().into(logo);
                             }
                         });
                         break;
