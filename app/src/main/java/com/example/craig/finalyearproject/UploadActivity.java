@@ -1,5 +1,6 @@
 package com.example.craig.finalyearproject;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
@@ -7,18 +8,25 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -32,12 +40,18 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     private Uri filePath;
     private ProgressDialog progressDialog;
     private FirebaseStorage firebaseStorage;
-    private StorageReference storageReference;
+    private StorageReference storageReference,userRef,imageRef;
     private String name;
     private String getUserName;
     private EditText username;
     private FirebaseDatabase database;
     private DatabaseReference ref;
+    private Toolbar toolbar;
+    private FirebaseUser UserID;
+    private String imageName = "";
+    private ImageView logo;
+    private String url;
+    private TextView title;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +61,10 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         storageReference = firebaseStorage.getReferenceFromUrl("gs://finalyearproject-894cb.appspot.com");
         database = FirebaseDatabase.getInstance();
         ref = database.getReference();
+
+        UserID = FirebaseAuth.getInstance().getCurrentUser();
+        userRef = storageReference.child(UserID.getUid());
+
         chooseImg = (Button)findViewById(R.id.chooseImg);
         uploadImg = (Button)findViewById(R.id.uploadImg);
         imgView = (ImageView)findViewById(R.id.imgView);
@@ -54,12 +72,8 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         fileName.setVisibility(View.INVISIBLE);
         username = (EditText) findViewById(R.id.username);
         username.setVisibility(View.INVISIBLE);
-
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setLogo(R.drawable.git);
-        actionBar.setDisplayUseLogoEnabled(true);
-        actionBar.setDisplayShowHomeEnabled(true);
-
+        setImageForToolBar();
+        initToolBar();
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Uploading....");
 
@@ -68,6 +82,46 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         uploadImg.setOnClickListener(this);
 
     }
+    public void setImageForToolBar(){
+        ref.child("User").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot ds : dataSnapshot.getChildren()){
+                    User user = ds.getValue(User.class);
+                    if(user.isProfile()){
+                        imageName = user.getImage();
+                        getUserName = user.getUserName();
+                        title.setText(getUserName);
+                        userRef.child(imageName).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                url = uri.toString();
+                                Picasso.with(UploadActivity.this).load(url).resize(50, 50).centerCrop().into(logo);
+                            }
+                        });
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+    public void initToolBar() {
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        //Toast.makeText(this,"" + userRef.toString(),Toast.LENGTH_LONG).show();
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        toolbar.setTitle("");
+        toolbar.setSubtitle("");
+        logo = (ImageView) toolbar.findViewById(R.id.logo);
+        title = (TextView) toolbar.findViewById(R.id.title);
+    }
+
 
     @Override
     public void onClick(View v) {
@@ -93,15 +147,16 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
             progressDialog.show();
             name = fileName.getText().toString();
             getUserName = username.getText().toString();
-            FirebaseUser UserID = FirebaseAuth.getInstance().getCurrentUser();
-            StorageReference r = storageReference.child(UserID.getUid());
-            StorageReference childRef = r.child(name+".jpg");
-            UploadTask uploadTask = childRef.putFile(filePath);
+
+            imageRef = userRef.child(name+".jpg");
+
+            UploadTask uploadTask = imageRef.putFile(filePath);
 
 
             User user = new User(UserID.getUid(),getUserName,name);
-            DatabaseReference newR = ref.child("User").push();
-            newR.setValue(user);
+            DatabaseReference newRef = ref.child("User").push();
+            user.setProfile(true);
+            newRef.setValue(user);
 
             uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
@@ -129,11 +184,34 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
             try {
                 //Used to load the image using the picasso library
                 Picasso.with(this).load(filePath).into(imgView);
+                //Toast.makeText(this,"" + filePath,Toast.LENGTH_LONG).show();
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
 
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main_menu_upload, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        if(id == R.id.action_maps){
+            startActivity(new Intent(this,MapsActivity.class));
+            finish();
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }

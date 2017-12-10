@@ -1,21 +1,26 @@
 package com.example.craig.finalyearproject;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
@@ -30,9 +35,17 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,13 +58,24 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private double lat;
     private double lon;
     private String currentPosName;
-    private FirebaseDatabase firebaseDatabase;
     private DatabaseReference ref;
+    private FirebaseDatabase database;
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference refGeo;
+    private FirebaseStorage firebaseStorage;
+    private StorageReference storageReference,userRef,imageRef;
     private ArrayList cordinList;
     private ListView listView;
     private ArrayAdapter arrayAdapter;
     private double radius;
     private Polyline line=null;
+    private Toolbar toolbar;
+    private FirebaseUser UserID;
+    private String imageName = "";
+    private ImageView logo;
+    private String url;
+    private TextView title;
+    private String getUserName;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +88,56 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         listView = (ListView) findViewById(R.id.list);
         cordinList = new ArrayList();
         listView.setOnItemClickListener(this);
+
+        firebaseStorage = FirebaseStorage.getInstance();
+        storageReference = firebaseStorage.getReferenceFromUrl("gs://finalyearproject-894cb.appspot.com");
+        database = FirebaseDatabase.getInstance();
+        ref = database.getReference();
+        UserID = FirebaseAuth.getInstance().getCurrentUser();
+        userRef = storageReference.child(UserID.getUid());
+
+        setImageForToolBar();
+        initToolBar();
+    }
+
+    public void setImageForToolBar(){
+        ref.child("User").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot ds : dataSnapshot.getChildren()){
+                    User user = ds.getValue(User.class);
+                    if(user.isProfile()){
+                        imageName = user.getImage();
+                        getUserName = user.getUserName();
+                        title.setText(getUserName);
+                        userRef.child(imageName).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                url = uri.toString();
+                                Picasso.with(MapsActivity.this).load(url).resize(50, 50).centerCrop().into(logo);
+                            }
+                        });
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+    public void initToolBar() {
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        //Toast.makeText(this,"" + userRef.toString(),Toast.LENGTH_LONG).show();
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        toolbar.setTitle("");
+        toolbar.setSubtitle("");
+        logo = (ImageView) toolbar.findViewById(R.id.logo);
+        title = (TextView) toolbar.findViewById(R.id.title);
     }
 
 
@@ -95,8 +169,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.addMarker(new MarkerOptions().position(dublin).title("Current Location"));
         map.moveCamera(CameraUpdateFactory.newLatLng(dublin));
         map.animateCamera(CameraUpdateFactory.zoomTo(15));
-        //mlocation.getLatitude();
-        //mlocation.getLongitude();
+        lat = mlocation.getLatitude();
+        lon = mlocation.getLongitude();
     }
 
     private void moveMap() {
@@ -129,10 +203,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         checkListSize();
+
+        if(id == R.id.action_fileUpload){
+            startActivity(new Intent(this,UploadActivity.class));
+            finish();
+        }
+
         if(id == R.id.action_getCurrentPosition){
             getCurrentLocation();
             moveMap();
-
         }
         if (id == R.id.action_address) {
             openDialog();
@@ -158,8 +237,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void setUpFireBase(){
         firebaseDatabase = FirebaseDatabase.getInstance();
-        ref = firebaseDatabase.getReference("Geo Locations");
-        GeoFire geoFire = new GeoFire(ref);
+        refGeo = firebaseDatabase.getReference("Geo Locations");
+        GeoFire geoFire = new GeoFire(refGeo);
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(mlocation.getLatitude(),mlocation.getLongitude()),radius);
         arrayAdapter = new ArrayAdapter(getBaseContext(),android.R.layout.simple_list_item_1,cordinList);
         listView.setAdapter(arrayAdapter);
@@ -223,8 +302,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 Address address = addresses.get(0);
                 firebaseDatabase = FirebaseDatabase.getInstance();
-                ref = firebaseDatabase.getReference("Geo Locations");
-                GeoFire geoFire = new GeoFire(ref);
+                refGeo = firebaseDatabase.getReference("Geo Locations");
+                GeoFire geoFire = new GeoFire(refGeo);
                 geoFire.setLocation(loctionName, new GeoLocation(address.getLatitude(), address.getLongitude()));
 
             } catch (IOException e) {

@@ -10,6 +10,7 @@ public class User {
     private String UserID;
     private String UserName;
     private String Image;
+    private boolean profile;
 
     public User (){
 
@@ -44,6 +45,11 @@ public class User {
     public void setImage(String image) {
         Image = image;
     }
+
+    public boolean isProfile() {return profile;}
+
+    public void setProfile(boolean profile) {this.profile = profile;}
+
 
 
 }

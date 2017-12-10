@@ -8,4 +8,6 @@
     <string name="action_10KM">10KM</string>
     <string name="action_15KM">15KM</string>
     <string name="action_getCurrentPosition">Get Current Address</string>
+    <string name="action_GoToMaps">Go to maps</string>
+    <string name="action_GoToFileUpload">Go to file upload</string>
 </resources>
