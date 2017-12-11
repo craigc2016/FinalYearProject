@@ -2,6 +2,7 @@ package com.example.craig.finalyearproject;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,7 +32,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
         //Get Reference to Firebase Authentication
         firebaseAuth = FirebaseAuth.getInstance();
         /*
@@ -81,7 +82,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             Toast.makeText(this,"Please enter email", Toast.LENGTH_LONG).show();
             //stopping the function execution further
             return;
-
         }
 
         if (TextUtils.isEmpty(passwordText)){
@@ -89,7 +89,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             Toast.makeText(this,"Please enter password",Toast.LENGTH_LONG).show();
             //stopping the function execution further
             return;
-
         }
         //If validations are ok
         //show progress bar
@@ -102,8 +101,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         progressDialog.dismiss();
                         if(task.isSuccessful()){
-                            //MapScreen();
-                            UploadScreen();
+                            MapScreen();
+                            //UploadScreen();
                         }else {
                             Toast.makeText(getApplicationContext(), "ERROR USER NOT FOUND PLEASE TRY AGAIN!",Toast.LENGTH_SHORT).show();
                         }

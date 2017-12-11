@@ -1,12 +1,10 @@
 package com.example.craig.finalyearproject;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -18,6 +16,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.craig.finalyearproject.model.User;
+import com.example.craig.finalyearproject.model.Username;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -26,8 +26,10 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
@@ -43,7 +45,6 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     private StorageReference storageReference,userRef,imageRef;
     private String name;
     private String getUserName;
-    private EditText username;
     private FirebaseDatabase database;
     private DatabaseReference ref;
     private Toolbar toolbar;
@@ -52,6 +53,7 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     private ImageView logo;
     private String url;
     private TextView title;
+    private String email;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,17 +63,18 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         storageReference = firebaseStorage.getReferenceFromUrl("gs://finalyearproject-894cb.appspot.com");
         database = FirebaseDatabase.getInstance();
         ref = database.getReference();
-
+        //create and give the folder stoarge a value using the User ID
         UserID = FirebaseAuth.getInstance().getCurrentUser();
         userRef = storageReference.child(UserID.getUid());
+
 
         chooseImg = (Button)findViewById(R.id.chooseImg);
         uploadImg = (Button)findViewById(R.id.uploadImg);
         imgView = (ImageView)findViewById(R.id.imgView);
         fileName = (EditText) findViewById(R.id.editName);
         fileName.setVisibility(View.INVISIBLE);
-        username = (EditText) findViewById(R.id.username);
-        username.setVisibility(View.INVISIBLE);
+
+        setUpUserName();
         setImageForToolBar();
         initToolBar();
         progressDialog = new ProgressDialog(this);
@@ -82,7 +85,29 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         uploadImg.setOnClickListener(this);
 
     }
+    public void setUpUserName(){
+        email = UserID.getEmail().toLowerCase();
+        //Query query = ref.child("Username");
+        ref.child("UserName").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot ds : dataSnapshot.getChildren()){
+                    Username username  = ds.getValue(Username.class);
 
+                    if(email.equals(username.getEmail().toLowerCase())){
+                        getUserName = username.getUsername();
+                        title.setText(getUserName);
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
     public void setImageForToolBar(){
         ref.child("User").addValueEventListener(new ValueEventListener() {
             @Override
@@ -91,13 +116,17 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
                     User user = ds.getValue(User.class);
                     if(user.isProfile()){
                         imageName = user.getImage();
-                        getUserName = user.getUserName();
-                        title.setText(getUserName);
                         userRef.child(imageName).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri uri) {
-                                url = uri.toString();
-                                Picasso.with(UploadActivity.this).load(url).resize(100, 100).centerCrop().into(logo);
+                                try{
+                                    url = uri.toString();
+                                    Toast.makeText(getApplication(),url,Toast.LENGTH_LONG).show();
+                                    Picasso.with(UploadActivity.this).load(url).resize(100, 100).centerCrop().into(logo);
+                                }catch (Exception e){
+                                    Toast.makeText(getApplication(),"Error while connecting to url" + url,Toast.LENGTH_LONG).show();
+                                    return;
+                                }
                             }
                         });
                         break;
@@ -140,21 +169,28 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         intent.setAction(intent.ACTION_PICK);
         startActivityForResult(Intent.createChooser(intent,"SELECT IMAGE"),PICK_IMAGE_REQUEST);
         fileName.setVisibility(View.VISIBLE);
-        username.setVisibility(View.VISIBLE);
     }
 
+    /*
+    This method is for handling the file upload of the app
+
+     */
     public void UploadImage(){
         if(filePath != null){
             progressDialog.show();
             name = fileName.getText().toString();
-            getUserName = username.getText().toString();
-
-            imageRef = userRef.child(name+".jpg");
+            /*
+            This bit is used for the refs and creation of the
+            folders in the storage tab.
+             */
+            //assign a storage ref using the base storage ref of the folder user id
+            userRef = storageReference.child(UserID.getUid());
+            imageRef = userRef.child(name);
+            //Toast.makeText(getApplicationContext(),strName,Toast.LENGTH_LONG).show();
+            User user = new User(UserID.getUid(),getUserName,name);
 
             UploadTask uploadTask = imageRef.putFile(filePath);
 
-
-            User user = new User(UserID.getUid(),getUserName,name);
             DatabaseReference newRef = ref.child("User").push();
             user.setProfile(true);
             newRef.setValue(user);

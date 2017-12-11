@@ -8,12 +8,12 @@
 
 
     <android.support.v7.widget.Toolbar
-    android:id="@+id/toolbar"
-    android:layout_width="match_parent"
-    android:layout_height="58dp"
-    android:background="?attr/colorPrimary"
-    android:minHeight="?attr/actionBarSize"
-    android:titleTextColor="#ffffff">
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="58dp"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:titleTextColor="#ffffff">
 
         <ImageView
             android:id="@+id/logo"
@@ -34,9 +34,9 @@
         android:layout_width="300dp"
         android:layout_height="200dp"
         android:id="@+id/imgView"
-        android:layout_marginBottom="59dp"
-        android:layout_alignBottom="@+id/editName"
-        android:layout_centerHorizontal="true" />
+        android:layout_below="@+id/toolbar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp" />
 
     <Button
         android:layout_width="match_parent"
@@ -58,26 +58,13 @@
         android:id="@+id/editName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/username"
+        android:layout_above="@+id/chooseImg"
         android:layout_alignEnd="@+id/imgView"
         android:layout_alignStart="@+id/imgView"
-        android:layout_marginBottom="26dp"
+        android:layout_marginBottom="86dp"
         android:ems="10"
         android:hint="FileName"
-        android:inputType="textPersonName"
-        android:text="FileName" />
+        android:inputType="textPersonName" />
 
-    <EditText
-        android:id="@+id/username"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/chooseImg"
-        android:layout_alignEnd="@+id/editName"
-        android:layout_alignStart="@+id/imgView"
-        android:layout_marginBottom="61dp"
-        android:ems="10"
-        android:hint="Username"
-        android:inputType="textPersonName"
-        android:text="Username" />
 </RelativeLayout>
 

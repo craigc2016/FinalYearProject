@@ -23,6 +23,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.craig.finalyearproject.model.AddressDialog;
+import com.example.craig.finalyearproject.model.MyGeoLocation;
+import com.example.craig.finalyearproject.model.User;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;

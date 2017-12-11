@@ -1,4 +1,4 @@
-package com.example.craig.finalyearproject;
+package com.example.craig.finalyearproject.model;
 
 /**
  * Created by craig on 06/12/2017.

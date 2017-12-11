@@ -1,4 +1,4 @@
-package com.example.craig.finalyearproject;
+package com.example.craig.finalyearproject.model;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -9,6 +9,8 @@ import android.support.v7.app.AppCompatDialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+
+import com.example.craig.finalyearproject.R;
 
 /**
  * Created by craig on 08/12/2017.
