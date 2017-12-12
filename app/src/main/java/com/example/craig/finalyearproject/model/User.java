@@ -1,7 +1,5 @@
 package com.example.craig.finalyearproject.model;
 
-import android.net.Uri;
-
 /**
  * Created by craig on 26/11/2017.
  */

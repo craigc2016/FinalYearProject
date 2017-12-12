@@ -1,10 +1,12 @@
 package com.example.craig.finalyearproject;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -16,8 +18,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.craig.finalyearproject.model.AddressDialog;
+import com.example.craig.finalyearproject.model.ImageDialog;
 import com.example.craig.finalyearproject.model.User;
-import com.example.craig.finalyearproject.model.Username;
+import com.example.craig.finalyearproject.model.UsernameInfo;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -29,13 +33,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
-public class UploadActivity extends AppCompatActivity implements View.OnClickListener{
-    private Button chooseImg, uploadImg;
+import java.util.ArrayList;
+
+public class UploadActivity extends AppCompatActivity implements View.OnClickListener,ImageDialog.ImageDialogListener{
+    private Button chooseImg, uploadImg,checkImg;
     private EditText fileName;
     private ImageView imgView;
     private int PICK_IMAGE_REQUEST = 111;
@@ -54,6 +59,8 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     private String url;
     private TextView title;
     private String email;
+    private String response;
+    private boolean flag;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,36 +73,36 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         //create and give the folder stoarge a value using the User ID
         UserID = FirebaseAuth.getInstance().getCurrentUser();
         userRef = storageReference.child(UserID.getUid());
-
-
+        //Toast.makeText(this,"" + ref.child("User").child(UserID.getUid()),Toast.LENGTH_LONG).show();
+        checkImg = (Button) findViewById(R.id.btnCheckImage);
         chooseImg = (Button)findViewById(R.id.chooseImg);
         uploadImg = (Button)findViewById(R.id.uploadImg);
         imgView = (ImageView)findViewById(R.id.imgView);
         fileName = (EditText) findViewById(R.id.editName);
         fileName.setVisibility(View.INVISIBLE);
-
+        //checkImage();
         setUpUserName();
         setImageForToolBar();
         initToolBar();
+        uploadImg.setEnabled(false);
+        checkImg.setEnabled(false);
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Uploading....");
 
         chooseImg.setOnClickListener(this);
-
         uploadImg.setOnClickListener(this);
+        checkImg.setOnClickListener(this);
 
     }
     public void setUpUserName(){
         email = UserID.getEmail().toLowerCase();
-        //Query query = ref.child("Username");
         ref.child("UserName").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot ds : dataSnapshot.getChildren()){
-                    Username username  = ds.getValue(Username.class);
-
-                    if(email.equals(username.getEmail().toLowerCase())){
-                        getUserName = username.getUsername();
+                    UsernameInfo usernameInfo = ds.getValue(UsernameInfo.class);
+                    if(email.equals(usernameInfo.getEmail().toLowerCase())){
+                        getUserName = usernameInfo.getUsername();
                         title.setText(getUserName);
                         break;
                     }
@@ -109,19 +116,19 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         });
     }
     public void setImageForToolBar(){
-        ref.child("User").addValueEventListener(new ValueEventListener() {
+        ref.child("User").child(UserID.getUid()).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot ds : dataSnapshot.getChildren()){
                     User user = ds.getValue(User.class);
                     if(user.isProfile()){
-                        imageName = user.getImage();
+                        imageName = user.getImage().toString();
+                        //Toast.makeText(getApplicationContext(),"" + userRef.child(imageName),Toast.LENGTH_LONG).show();
                         userRef.child(imageName).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri uri) {
                                 try{
                                     url = uri.toString();
-                                    Toast.makeText(getApplication(),url,Toast.LENGTH_LONG).show();
                                     Picasso.with(UploadActivity.this).load(url).resize(100, 100).centerCrop().into(logo);
                                 }catch (Exception e){
                                     Toast.makeText(getApplication(),"Error while connecting to url" + url,Toast.LENGTH_LONG).show();
@@ -158,6 +165,9 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         if(v == chooseImg){
             ChooseImage();
         }
+        if(v == checkImg){
+            checkImage();
+        }
         if(v == uploadImg){
             UploadImage();
         }
@@ -171,35 +181,67 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         fileName.setVisibility(View.VISIBLE);
     }
 
+    public void checkImage(){
+        //Toast.makeText(this,""+q.toString(),Toast.LENGTH_LONG).show();
+        ref.child("User").child(UserID.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot ds : dataSnapshot.getChildren()){
+                    User user = ds.getValue(User.class);
+                    Toast.makeText(getApplication(),""+user.getImage(),Toast.LENGTH_LONG).show();
+                    if(user.getImage().equals(name)){
+                        Toast.makeText(getApplicationContext(),"Name of image already in use please try again",Toast.LENGTH_LONG).show();
+                        Refresh();
+                        break;
+                    }
+                    else {
+                        checkImg.setEnabled(false);
+                        uploadImg.setEnabled(true);
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        checkImg.setEnabled(false);
+        uploadImg.setEnabled(true);
+    }
+
     /*
     This method is for handling the file upload of the app
 
      */
     public void UploadImage(){
-        if(filePath != null){
-            progressDialog.show();
+        if(filePath != null && response != null){
             name = fileName.getText().toString();
-            /*
-            This bit is used for the refs and creation of the
-            folders in the storage tab.
-             */
-            //assign a storage ref using the base storage ref of the folder user id
+            User user = new User();
+            if(response.equals("Yes")){
+                user.setProfile(true);
+            }else{
+                user.setProfile(false);
+            }
+
+            progressDialog.show();
             userRef = storageReference.child(UserID.getUid());
             imageRef = userRef.child(name);
-            //Toast.makeText(getApplicationContext(),strName,Toast.LENGTH_LONG).show();
-            User user = new User(UserID.getUid(),getUserName,name);
-
             UploadTask uploadTask = imageRef.putFile(filePath);
-
-            DatabaseReference newRef = ref.child("User").push();
-            user.setProfile(true);
+            //user = new User(UserID.getUid(),getUserName,name);
+            DatabaseReference newRef = ref.child("User").child(UserID.getUid()).push();
+            user.setUserID(UserID.getUid());
+            user.setUserName(getUserName);
+            user.setImage(name);
             newRef.setValue(user);
 
             uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                     progressDialog.dismiss();
-                    Toast.makeText(UploadActivity.this, "Upload successful " + name, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(UploadActivity.this, "Upload successful ", Toast.LENGTH_SHORT).show();
+                    Refresh();
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
@@ -208,20 +250,29 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
                     Toast.makeText(UploadActivity.this, "Upload Failed -> " + e, Toast.LENGTH_SHORT).show();
                 }
             });
-        }else{
+        }
+        else{
             Toast.makeText(UploadActivity.this, "Select an image", Toast.LENGTH_SHORT).show();
         }
     }
 
+    protected void onPause(){
+        super.onPause();
+        progressDialog.dismiss();
+    }
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        checkImg.setEnabled(true);
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             filePath = data.getData();
             try {
                 //Used to load the image using the picasso library
                 Picasso.with(this).load(filePath).into(imgView);
                 //Toast.makeText(this,"" + filePath,Toast.LENGTH_LONG).show();
+                openDialog();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -229,6 +280,7 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
 
         }
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -250,5 +302,20 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void openDialog(){
+        ImageDialog imageDialog = new ImageDialog();
+        imageDialog.show(getSupportFragmentManager(),"Image Dialog");
+    }
+
+    @Override
+    public void getTexts(String response) {
+        this.response = response;
+    }
+
+    public void Refresh(){
+        finish();
+        startActivity(new Intent(UploadActivity.this,UploadActivity.class));
     }
 }

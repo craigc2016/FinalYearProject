@@ -26,6 +26,7 @@ import android.widget.Toast;
 import com.example.craig.finalyearproject.model.AddressDialog;
 import com.example.craig.finalyearproject.model.MyGeoLocation;
 import com.example.craig.finalyearproject.model.User;
+import com.example.craig.finalyearproject.model.UsernameInfo;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
@@ -79,6 +80,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String url;
     private TextView title;
     private String getUserName;
+    private String email;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,21 +100,42 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         ref = database.getReference();
         UserID = FirebaseAuth.getInstance().getCurrentUser();
         userRef = storageReference.child(UserID.getUid());
-
+        setUpUserName();
         setImageForToolBar();
         initToolBar();
     }
 
+    public void setUpUserName(){
+        email = UserID.getEmail().toLowerCase();
+        //Query query = ref.child("UsernameInfo");
+        ref.child("UserName").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot ds : dataSnapshot.getChildren()){
+                    UsernameInfo usernameInfo = ds.getValue(UsernameInfo.class);
+                    if(email.equals(usernameInfo.getEmail().toLowerCase())){
+                        getUserName = usernameInfo.getUsername();
+                        title.setText(getUserName);
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     public void setImageForToolBar(){
-        ref.child("User").addValueEventListener(new ValueEventListener() {
+        ref.child("User").child(UserID.getUid()).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot ds : dataSnapshot.getChildren()){
                     User user = ds.getValue(User.class);
                     if(user.isProfile()){
                         imageName = user.getImage();
-                        getUserName = user.getUserName();
-                        title.setText(getUserName);
                         userRef.child(imageName).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri uri) {

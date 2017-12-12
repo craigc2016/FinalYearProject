@@ -12,7 +12,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.craig.finalyearproject.model.Username;
+import com.example.craig.finalyearproject.model.UsernameInfo;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -88,8 +88,8 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         String usernameText = username.getText().toString().trim();
 
         if (TextUtils.isEmpty(passwordText)){
-            //username is empty
-            Toast.makeText(this,"Please enter username",Toast.LENGTH_SHORT).show();
+            //usernameInfo is empty
+            Toast.makeText(this,"Please enter usernameInfo",Toast.LENGTH_SHORT).show();
             //stopping the function execution further
             return;
         }
@@ -108,9 +108,9 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             return;
         }
 
-        Username username = new Username(usernameText,emailText);
+        UsernameInfo usernameInfo = new UsernameInfo(usernameText,emailText);
         DatabaseReference newRef = userNameRef.push();
-        newRef.setValue(username);
+        newRef.setValue(usernameInfo);
         //If validations are ok
         //show progress bar
         progressDialog.setMessage("Registering User...");

@@ -43,7 +43,7 @@
         android:layout_height="wrap_content"
         android:text="Choose Image"
         android:id="@+id/chooseImg"
-        android:layout_above="@+id/uploadImg"
+        android:layout_above="@+id/btnCheckImage"
         android:layout_alignParentStart="true" />
 
     <Button
@@ -58,13 +58,21 @@
         android:id="@+id/editName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/chooseImg"
-        android:layout_alignEnd="@+id/imgView"
-        android:layout_alignStart="@+id/imgView"
-        android:layout_marginBottom="86dp"
         android:ems="10"
         android:hint="FileName"
-        android:inputType="textPersonName" />
+        android:inputType="textPersonName"
+        android:layout_below="@+id/imgView"
+        android:layout_alignStart="@+id/imgView"
+        android:layout_marginTop="38dp"
+        android:layout_alignEnd="@+id/imgView" />
+
+    <Button
+        android:id="@+id/btnCheckImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Check Image Name"
+        android:layout_above="@+id/uploadImg"
+        android:layout_alignParentStart="true" />
 
 </RelativeLayout>
 

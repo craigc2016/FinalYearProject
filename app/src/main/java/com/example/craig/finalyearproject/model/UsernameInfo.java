@@ -4,14 +4,14 @@ package com.example.craig.finalyearproject.model;
  * Created by craig on 11/12/2017.
  */
 
-public class Username {
+public class UsernameInfo {
     private String Uid;
     private String username;
     private String email;
 
-    public Username(){}
+    public UsernameInfo(){}
 
-    public Username(String username,String email){
+    public UsernameInfo(String username, String email){
         this.username = username;
         this.email = email;
     }
