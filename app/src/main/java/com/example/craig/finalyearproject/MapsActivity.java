@@ -129,31 +129,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void setImageForToolBar(){
-        ref.child("User").child(UserID.getUid()).addValueEventListener(new ValueEventListener() {
+        userRef.child("profile").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot ds : dataSnapshot.getChildren()){
-                    User user = ds.getValue(User.class);
-                    if(user.isProfile()){
-                        imageName = user.getImage();
-                        userRef.child(imageName).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                            @Override
-                            public void onSuccess(Uri uri) {
-                                url = uri.toString();
-                                Picasso.with(MapsActivity.this).load(url).resize(100,100).centerCrop().into(logo);
-                            }
-                        });
-                        break;
-                    }
+            public void onSuccess(Uri uri) {
+                try{
+                    url = uri.toString();
+                    Picasso.with(MapsActivity.this).load(url).resize(100, 100).centerCrop().into(logo);
+                }catch (Exception e){
+                    Toast.makeText(getApplication(),"Error while connecting to url" + url,Toast.LENGTH_LONG).show();
+                    return;
                 }
             }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
         });
-
     }
     public void initToolBar() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -246,7 +233,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(id == R.id.action_5KM){
             setUpDoubleValue(item.toString());
             setUpFireBase();
-            Toast.makeText(this,"list size" + cordinList.size()+ "num " + num,Toast.LENGTH_LONG).show();
         }
         if(id == R.id.action_10KM){
             setUpDoubleValue(item.toString());

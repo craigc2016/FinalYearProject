@@ -39,9 +39,8 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-public class UploadActivity extends AppCompatActivity implements View.OnClickListener,ImageDialog.ImageDialogListener{
-    private Button chooseImg, uploadImg,checkImg;
-    private EditText fileName;
+public class UploadActivity extends AppCompatActivity implements View.OnClickListener{
+    private Button chooseImg, uploadImg;
     private ImageView imgView;
     private int PICK_IMAGE_REQUEST = 111;
     private Uri filePath;
@@ -59,8 +58,7 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     private String url;
     private TextView title;
     private String email;
-    private String response;
-    private boolean flag;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,24 +72,20 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         UserID = FirebaseAuth.getInstance().getCurrentUser();
         userRef = storageReference.child(UserID.getUid());
         //Toast.makeText(this,"" + ref.child("User").child(UserID.getUid()),Toast.LENGTH_LONG).show();
-        checkImg = (Button) findViewById(R.id.btnCheckImage);
         chooseImg = (Button)findViewById(R.id.chooseImg);
         uploadImg = (Button)findViewById(R.id.uploadImg);
         imgView = (ImageView)findViewById(R.id.imgView);
-        fileName = (EditText) findViewById(R.id.editName);
-        fileName.setVisibility(View.INVISIBLE);
+
         //checkImage();
         setUpUserName();
         setImageForToolBar();
         initToolBar();
-        uploadImg.setEnabled(false);
-        checkImg.setEnabled(false);
+
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Uploading....");
 
         chooseImg.setOnClickListener(this);
         uploadImg.setOnClickListener(this);
-        checkImg.setOnClickListener(this);
 
     }
     public void setUpUserName(){
@@ -116,34 +110,16 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         });
     }
     public void setImageForToolBar(){
-        ref.child("User").child(UserID.getUid()).addValueEventListener(new ValueEventListener() {
+        userRef.child("profile").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot ds : dataSnapshot.getChildren()){
-                    User user = ds.getValue(User.class);
-                    if(user.isProfile()){
-                        imageName = user.getImage().toString();
-                        //Toast.makeText(getApplicationContext(),"" + userRef.child(imageName),Toast.LENGTH_LONG).show();
-                        userRef.child(imageName).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                            @Override
-                            public void onSuccess(Uri uri) {
-                                try{
-                                    url = uri.toString();
-                                    Picasso.with(UploadActivity.this).load(url).resize(100, 100).centerCrop().into(logo);
-                                }catch (Exception e){
-                                    Toast.makeText(getApplication(),"Error while connecting to url" + url,Toast.LENGTH_LONG).show();
-                                    return;
-                                }
-                            }
-                        });
-                        break;
-                    }
+            public void onSuccess(Uri uri) {
+                try{
+                    url = uri.toString();
+                    Picasso.with(UploadActivity.this).load(url).resize(100, 100).centerCrop().into(logo);
+                }catch (Exception e){
+                    Toast.makeText(getApplication(),"Error while connecting to url" + url,Toast.LENGTH_LONG).show();
+                    return;
                 }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
             }
         });
 
@@ -165,9 +141,6 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         if(v == chooseImg){
             ChooseImage();
         }
-        if(v == checkImg){
-            checkImage();
-        }
         if(v == uploadImg){
             UploadImage();
         }
@@ -178,63 +151,26 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         intent.setType("image/*");
         intent.setAction(intent.ACTION_PICK);
         startActivityForResult(Intent.createChooser(intent,"SELECT IMAGE"),PICK_IMAGE_REQUEST);
-        fileName.setVisibility(View.VISIBLE);
     }
 
-    public void checkImage(){
-        //Toast.makeText(this,""+q.toString(),Toast.LENGTH_LONG).show();
-        ref.child("User").child(UserID.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot ds : dataSnapshot.getChildren()){
-                    User user = ds.getValue(User.class);
-                    Toast.makeText(getApplication(),""+user.getImage(),Toast.LENGTH_LONG).show();
-                    if(user.getImage().equals(name)){
-                        Toast.makeText(getApplicationContext(),"Name of image already in use please try again",Toast.LENGTH_LONG).show();
-                        Refresh();
-                        break;
-                    }
-                    else {
-                        checkImg.setEnabled(false);
-                        uploadImg.setEnabled(true);
-                        break;
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-        checkImg.setEnabled(false);
-        uploadImg.setEnabled(true);
-    }
 
     /*
     This method is for handling the file upload of the app
 
      */
     public void UploadImage(){
-        if(filePath != null && response != null){
-            name = fileName.getText().toString();
-            User user = new User();
-            if(response.equals("Yes")){
-                user.setProfile(true);
-            }else{
-                user.setProfile(false);
-            }
-
+        if(filePath != null){
+            name = "profile";
             progressDialog.show();
             userRef = storageReference.child(UserID.getUid());
             imageRef = userRef.child(name);
             UploadTask uploadTask = imageRef.putFile(filePath);
-            //user = new User(UserID.getUid(),getUserName,name);
+
+            /*
             DatabaseReference newRef = ref.child("User").child(UserID.getUid()).push();
-            user.setUserID(UserID.getUid());
-            user.setUserName(getUserName);
-            user.setImage(name);
+            User user = new User(UserID.getUid(),getUserName,name);
             newRef.setValue(user);
+            */
 
             uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
@@ -265,14 +201,13 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        checkImg.setEnabled(true);
+
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             filePath = data.getData();
             try {
                 //Used to load the image using the picasso library
                 Picasso.with(this).load(filePath).into(imgView);
                 //Toast.makeText(this,"" + filePath,Toast.LENGTH_LONG).show();
-                openDialog();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -304,18 +239,9 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         return super.onOptionsItemSelected(item);
     }
 
-    private void openDialog(){
-        ImageDialog imageDialog = new ImageDialog();
-        imageDialog.show(getSupportFragmentManager(),"Image Dialog");
-    }
-
-    @Override
-    public void getTexts(String response) {
-        this.response = response;
-    }
-
-    public void Refresh(){
+    private void Refresh(){
+        startActivity(new Intent(this,UploadActivity.class));
         finish();
-        startActivity(new Intent(UploadActivity.this,UploadActivity.class));
     }
+
 }
