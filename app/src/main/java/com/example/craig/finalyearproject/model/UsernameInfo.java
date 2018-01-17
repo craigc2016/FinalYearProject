@@ -5,7 +5,6 @@ package com.example.craig.finalyearproject.model;
  */
 
 public class UsernameInfo {
-    private String Uid;
     private String username;
     private String email;
 
@@ -14,13 +13,6 @@ public class UsernameInfo {
     public UsernameInfo(String username, String email){
         this.username = username;
         this.email = email;
-    }
-    public String getUid() {
-        return Uid;
-    }
-
-    public void setUid(String uid) {
-        Uid = uid;
     }
 
     public String getUsername() {

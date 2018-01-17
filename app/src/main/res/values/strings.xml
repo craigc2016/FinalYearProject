@@ -10,4 +10,5 @@
     <string name="action_getCurrentPosition">Get Current Address</string>
     <string name="action_GoToMaps">Go to maps</string>
     <string name="action_GoToFileUpload">Go to file upload</string>
+    <string name="action_Logout">Logout</string>
 </resources>

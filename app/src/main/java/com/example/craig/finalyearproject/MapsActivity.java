@@ -243,6 +243,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             setUpDoubleValue(item.toString());
             setUpFireBase();
         }
+        if(id == R.id.action_logout){
+            finish();
+        }
 
         return super.onOptionsItemSelected(item);
     }

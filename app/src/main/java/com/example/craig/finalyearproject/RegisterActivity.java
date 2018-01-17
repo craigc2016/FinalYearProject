@@ -17,11 +17,18 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserInfo;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
 
 public class RegisterActivity extends AppCompatActivity implements View.OnClickListener {
-
+    private ArrayList<UsernameInfo> list = new ArrayList<>();
     private EditText email,password,username;
     private Button signIn;
     private Button clear;
@@ -55,11 +62,14 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         msg = (TextView) findViewById(R.id.txtMsg);
         progressDialog = new ProgressDialog(this);
 
+        //get the in use usernames
+        getUserNames();
 
         //Add listener to buttons and text view
         signIn.setOnClickListener(this);
         clear.setOnClickListener(this);
         msg.setOnClickListener(this);
+
     }
 
     /*
@@ -82,12 +92,41 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         }
     }
 
-    private void userReg(){
-        String emailText = email.getText().toString().trim();
-        String passwordText = password.getText().toString().trim();
-        String usernameText = username.getText().toString().trim();
+    /*
+    This method downloads the usernames stored in the
+    firebase database. So when a user chooses a username it makes
+    sure it does not clash with one already in use.
+     */
+    private void getUserNames(){
+        Query query = userNameRef;
+        query.orderByKey().addValueEventListener(new ValueEventListener()  {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot ds : dataSnapshot.getChildren()){
+                    UsernameInfo u = ds.getValue(UsernameInfo.class);
+                    list.add(u);
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
 
-        if (TextUtils.isEmpty(passwordText)){
+            }
+        });
+    }
+
+    /*
+    This method is used fot the register functionality of the app.
+    It takes the user information from the textfields. It then checks
+    the usernames list to check if one is in use. If so it will then
+    display the user with an error message. If a valid username and email information
+    is entered it will register the account and bring the user to the login page.
+     */
+    private void userReg(){
+        final String emailText = email.getText().toString().trim();
+        String passwordText = password.getText().toString().trim();
+        final String usernameText = username.getText().toString().trim();
+
+        if (TextUtils.isEmpty(usernameText)){
             //usernameInfo is empty
             Toast.makeText(this,"Please enter usernameInfo",Toast.LENGTH_SHORT).show();
             //stopping the function execution further
@@ -108,9 +147,17 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             return;
         }
 
-        UsernameInfo usernameInfo = new UsernameInfo(usernameText,emailText);
-        DatabaseReference newRef = userNameRef.push();
-        newRef.setValue(usernameInfo);
+        for (UsernameInfo item : list){
+            if(item.getUsername().equals(usernameText) ){
+                Toast.makeText(this,"Error username in use",Toast.LENGTH_SHORT).show();
+                username.setText("");
+                username.setFocusable(true);
+                return;
+            }else{
+                break;
+            }
+        }
+
         //If validations are ok
         //show progress bar
         progressDialog.setMessage("Registering User...");
@@ -124,6 +171,10 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                         progressDialog.dismiss();
                         if (task.isSuccessful()){
                             //User is successfully registered and logged in
+                            DatabaseReference newRef = userNameRef.push();
+                            UsernameInfo usernameInfo = new UsernameInfo(usernameText,emailText);
+                            newRef.setValue(usernameInfo);
+                            Toast.makeText(RegisterActivity.this, usernameText , Toast.LENGTH_SHORT).show();
                             LoginScreen();
                         }
                         else{
@@ -140,8 +191,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
 
 
     private void LoginScreen(){
-        Intent intent = new Intent(this,UploadActivity.class);
-        startActivity(intent);
+        startActivity(new Intent(this,LoginActivity.class));
         finish();
     }
 
