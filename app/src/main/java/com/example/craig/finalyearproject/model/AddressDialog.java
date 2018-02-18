@@ -16,16 +16,18 @@ import com.example.craig.finalyearproject.R;
  * Created by craig on 08/12/2017.
  */
 
+
 public class AddressDialog extends AppCompatDialogFragment {
-    private EditText addText;
+    private EditText addLat,addLon,addCode;
     private AddressDialogListener listener;
 
     public Dialog onCreateDialog(Bundle savedInstanceState){
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.layout_dialog,null);
-        addText = (EditText) view.findViewById(R.id.editAddress);
-
+        addLat = (EditText) view.findViewById(R.id.editLat);
+        addLon = (EditText) view.findViewById(R.id.editLon);
+        addCode = (EditText) view.findViewById(R.id.editCode);
         builder.setView(view)
                 .setTitle("Add Address")
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -37,8 +39,10 @@ public class AddressDialog extends AppCompatDialogFragment {
                 .setPositiveButton("Add", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String address = addText.getText().toString();
-                        listener.getTexts(address);
+                        String lat = addLat.getText().toString();
+                        String lon = addLon.getText().toString();
+                        String code = addCode.getText().toString();
+                        listener.getTexts(Double.parseDouble(lat),Double.parseDouble(lon),code);
                     }
                 });
         return builder.create();
@@ -55,6 +59,6 @@ public class AddressDialog extends AppCompatDialogFragment {
     }
 
     public interface AddressDialogListener {
-        void getTexts(String address);
+        void getTexts(double lat,double lon,String code );
     }
 }

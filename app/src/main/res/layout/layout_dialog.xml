@@ -4,7 +4,7 @@
     android:layout_height="match_parent">
 
     <EditText
-        android:id="@+id/editAddress"
+        android:id="@+id/editLat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -12,8 +12,29 @@
 
         android:layout_marginTop="55dp"
         android:ems="10"
-        android:hint="Address"
-        android:inputType="textPersonName"
-        android:text="Address" />
+        android:hint="Latitude"
+        android:inputType="textPersonName" />
+
+    <EditText
+        android:id="@+id/editLon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/editLat"
+        android:layout_below="@+id/editLat"
+        android:layout_marginTop="50dp"
+        android:ems="10"
+        android:hint="Longtitude"
+        android:inputType="textPersonName" />
+
+    <EditText
+        android:id="@+id/editCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/editLon"
+        android:layout_below="@+id/editLon"
+        android:layout_marginTop="44dp"
+        android:ems="10"
+        android:hint="BuildingCode"
+        android:inputType="textPersonName" />
 
 </RelativeLayout>

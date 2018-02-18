@@ -9,10 +9,13 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +34,9 @@ import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -51,9 +57,16 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener, ListView.OnItemClickListener {
     private int num =0;
@@ -67,7 +80,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference refGeo;
     private FirebaseStorage firebaseStorage;
-    private StorageReference storageReference,userRef,imageRef;
+    private StorageReference storageReference,userRef;
     private ArrayList cordinList;
     private ListView listView;
     private ArrayAdapter arrayAdapter;
@@ -81,6 +94,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private TextView title;
     private String getUserName;
     private String email;
+    private final static String BASE_URL = "https://maps.googleapis.com/maps/api/place/details/json?";
+    private final static String API_KEY = "AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
+    private final static String BUILDCODE = "ChIJh_WYZtwRZ0gRG6b0YJZQqTQ";
+    private static ArrayList PlacesObjects = new ArrayList();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,11 +107,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
         listView = (ListView) findViewById(R.id.list);
         cordinList = new ArrayList();
         listView.setOnItemClickListener(this);
 
         firebaseStorage = FirebaseStorage.getInstance();
+        firebaseDatabase = FirebaseDatabase.getInstance();
         storageReference = firebaseStorage.getReferenceFromUrl("gs://finalyearproject-894cb.appspot.com");
         database = FirebaseDatabase.getInstance();
         ref = database.getReference();
@@ -103,6 +122,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         setUpUserName();
         setImageForToolBar();
         initToolBar();
+        String url = BASE_URL+"placeid="+BUILDCODE+"&key="+API_KEY;
+        getPlaceInfo(url);
     }
 
     public void setUpUserName(){
@@ -233,11 +254,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(id == R.id.action_5KM){
             setUpDoubleValue(item.toString());
             setUpFireBase();
+            //Toast.makeText(getBaseContext(),"" + PlacesObjects.get(0),Toast.LENGTH_LONG).show();
+
         }
         if(id == R.id.action_10KM){
             setUpDoubleValue(item.toString());
             setUpFireBase();
-            //Toast.makeText(this,"list size" + getListSize()+ "num " + num,Toast.LENGTH_LONG).show();
         }
         if(id == R.id.action_15KM){
             setUpDoubleValue(item.toString());
@@ -251,7 +273,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void setUpFireBase(){
-        firebaseDatabase = FirebaseDatabase.getInstance();
+
         refGeo = firebaseDatabase.getReference("Geo Locations");
         GeoFire geoFire = new GeoFire(refGeo);
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(mlocation.getLatitude(),mlocation.getLongitude()),radius);
@@ -260,13 +282,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-                MyGeoLocation geoLocation = new MyGeoLocation();
                 lat = location.latitude;
                 lon = location.longitude;
+                cordinList.add(PlacesObjects.get(0));
+                Toast.makeText(getBaseContext(),"" + cordinList.size(),Toast.LENGTH_LONG).show();
+                /*
+                MyGeoLocation geoLocation = new MyGeoLocation();
                 geoLocation.setKey(key);
                 geoLocation.setLat(lat);
                 geoLocation.setLon(lon);
                 cordinList.add(geoLocation);
+                */
+
+
                 arrayAdapter.notifyDataSetChanged();
                 num = cordinList.size();
             }
@@ -301,16 +329,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
-    public void getTexts(String address) {
+    public void getTexts(double lat,double lon,String code) {
         //Toast.makeText(this,address,Toast.LENGTH_LONG).show();
-        setUpGeoCoding(address);
+        setUpGeoCoding(lat,lon,code);
     }
 
-    public void setUpGeoCoding(String loctionName){
+    public void setUpGeoCoding(double lat,double lon,String code){
+
+        firebaseDatabase = FirebaseDatabase.getInstance();
+        refGeo = firebaseDatabase.getReference("Geo Locations");
+        GeoFire geoFire = new GeoFire(refGeo);
+        geoFire.setLocation(code, new GeoLocation(lat, lon));
+
+        /*
         Geocoder geocoder = new Geocoder(this);
         if(geocoder.isPresent()){
             try {
-                List<Address>addresses = geocoder.getFromLocationName(loctionName,5);
+                List<Address>addresses = geocoder.getFromLocation(lat,lon,5);
                 if(addresses.size() == 0){
                     Toast.makeText(this,"Place not found",Toast.LENGTH_LONG).show();
                     return;
@@ -319,7 +354,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 firebaseDatabase = FirebaseDatabase.getInstance();
                 refGeo = firebaseDatabase.getReference("Geo Locations");
                 GeoFire geoFire = new GeoFire(refGeo);
-                geoFire.setLocation(loctionName, new GeoLocation(address.getLatitude(), address.getLongitude()));
+                geoFire.setLocation(address.getAddressLine(0), new GeoLocation(address.getLatitude(), address.getLongitude()));
+                for(int i=0;i<addresses.size();i++){
+                    Log.i("PLACES","" + addresses.get(i));
+                }
 
             } catch (IOException e) {
                 Toast.makeText(this,"Network to geocoder not working",Toast.LENGTH_LONG).show();
@@ -330,6 +368,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         else{
             Toast.makeText(this,"No Place entered",Toast.LENGTH_LONG).show();
         }
+        */
     }
 
     private void setUpDoubleValue(String item){
@@ -358,6 +397,66 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             cordinList.clear();
             arrayAdapter.notifyDataSetChanged();
         }
+    }
+
+    public void getPlaceInfo(String URL){
+        PlacesInto info = new PlacesInto();
+
+        try{
+            String placeDetails = info.execute(URL).get();
+            JSONObject jsonObjRoot = new JSONObject(placeDetails);
+
+            JSONObject jsonObjRes = jsonObjRoot.getJSONObject("result");
+            JSONObject geometry = jsonObjRes.getJSONObject("geometry");
+            JSONObject loc = geometry.getJSONObject("location");
+
+            //Place Details
+            double lat = loc.getDouble("lat"),lon = loc.getDouble("lng");
+            String phoneNum = jsonObjRes.getString("formatted_phone_number");
+            String address = jsonObjRes.getString("formatted_address");
+
+            MyGeoLocation geoLocation = new MyGeoLocation();
+            geoLocation.setAddress(address);
+            geoLocation.setLat(lat);
+            geoLocation.setLon(lon);
+            geoLocation.setPhoneNum(phoneNum);
+            //Toast.makeText(this,""+address + lat + lon + phoneNum,Toast.LENGTH_LONG).show();
+
+            //Log.i("TAGS", "" + address + lat + lon + phoneNum);
+            PlacesObjects.add(geoLocation);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+}
+
+class PlacesInto extends AsyncTask<String,Void,String> {
+    @Override
+    protected String doInBackground(String... prams) {
+
+        try{
+            URL url = new URL(prams[0]);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.connect();
+
+            InputStream inputStream = connection.getInputStream();
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+
+            int data = inputStreamReader.read();
+            String apiDetails = "";
+            char current;
+
+            while(data != -1){
+                current = (char)data;
+                apiDetails += current;
+                data = inputStreamReader.read();
+            }
+            return apiDetails;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return  null;
     }
 }
 
