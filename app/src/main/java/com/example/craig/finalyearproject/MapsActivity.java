@@ -10,7 +10,6 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -28,15 +27,12 @@ import android.widget.Toast;
 
 import com.example.craig.finalyearproject.model.AddressDialog;
 import com.example.craig.finalyearproject.model.MyGeoLocation;
-import com.example.craig.finalyearproject.model.User;
+import com.example.craig.finalyearproject.model.PlaceInformation;
 import com.example.craig.finalyearproject.model.UsernameInfo;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -66,7 +62,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Vector;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener, ListView.OnItemClickListener {
     private int num =0;
@@ -96,8 +92,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String email;
     private final static String BASE_URL = "https://maps.googleapis.com/maps/api/place/details/json?";
     private final static String API_KEY = "AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
-    private final static String BUILDCODE = "ChIJh_WYZtwRZ0gRG6b0YJZQqTQ";
-    private static ArrayList PlacesObjects = new ArrayList();
+    private static String BUILDCODE = "ChIJndYeak8LZ0gRiZGHpu60cfA";
+    private ArrayList PlacesObjects = new ArrayList();
+    private ArrayList PlacesId;
+    private PlaceInformation info;
+    private static String myKey="";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -107,7 +106,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
         listView = (ListView) findViewById(R.id.list);
         cordinList = new ArrayList();
         listView.setOnItemClickListener(this);
@@ -122,8 +120,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         setUpUserName();
         setImageForToolBar();
         initToolBar();
-        String url = BASE_URL+"placeid="+BUILDCODE+"&key="+API_KEY;
-        getPlaceInfo(url);
+        //getPlacesId();
+
+    }
+
+    public void getPlacesId(){
+        ref.child("Geo Locations").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot ds : dataSnapshot.getChildren()){
+                    MyGeoLocation g = ds.getValue(MyGeoLocation.class);
+                    Toast.makeText(getBaseContext(),""+g.getKey(),Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     public void setUpUserName(){
@@ -254,7 +269,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(id == R.id.action_5KM){
             setUpDoubleValue(item.toString());
             setUpFireBase();
-            //Toast.makeText(getBaseContext(),"" + PlacesObjects.get(0),Toast.LENGTH_LONG).show();
+            //Toast.makeText(getBaseContext(),"" + v.get(0),Toast.LENGTH_LONG).show();
+
+
+            //cordinList.add(info);
+            //arrayAdapter.notifyDataSetChanged();
+            //Toast.makeText(getBaseContext(),""+PlacesObjects.get(0),Toast.LENGTH_LONG).show();
+            //Log.i("MYGEO","");
 
         }
         if(id == R.id.action_10KM){
@@ -274,7 +295,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void setUpFireBase(){
 
-        refGeo = firebaseDatabase.getReference("Geo Locations");
+        refGeo = firebaseDatabase.getReference("GeoLocations");
         GeoFire geoFire = new GeoFire(refGeo);
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(mlocation.getLatitude(),mlocation.getLongitude()),radius);
         arrayAdapter = new ArrayAdapter(getBaseContext(),android.R.layout.simple_list_item_1,cordinList);
@@ -282,19 +303,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
+
                 lat = location.latitude;
                 lon = location.longitude;
-                cordinList.add(PlacesObjects.get(0));
-                Toast.makeText(getBaseContext(),"" + cordinList.size(),Toast.LENGTH_LONG).show();
-                /*
-                MyGeoLocation geoLocation = new MyGeoLocation();
-                geoLocation.setKey(key);
-                geoLocation.setLat(lat);
-                geoLocation.setLon(lon);
-                cordinList.add(geoLocation);
-                */
+                MyGeoLocation geoL = new MyGeoLocation();
+                geoL.setKey(key);
+                geoL.setLat(lat);
+                geoL.setLon(lon);
 
-
+                String url = BASE_URL + "placeid=" + key + "&key=" + API_KEY;
+                info = getPlaceInfo(url);
+                cordinList.add(info);
                 arrayAdapter.notifyDataSetChanged();
                 num = cordinList.size();
             }
@@ -311,12 +330,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onGeoQueryReady() {
-
             }
 
             @Override
             public void onGeoQueryError(DatabaseError error) {
-
+                //Toast.makeText(getBaseContext(),"ERROR" + error,Toast.LENGTH_LONG).show();
             }
 
         });
@@ -331,30 +349,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void getTexts(double lat,double lon,String code) {
         //Toast.makeText(this,address,Toast.LENGTH_LONG).show();
-        setUpGeoCoding(lat,lon,code);
+        setUpMyGeoLocation(lat,lon,code);
     }
 
-    public void setUpGeoCoding(double lat,double lon,String code){
+    public void setUpMyGeoLocation(double lat,double lon,String code){
 
         firebaseDatabase = FirebaseDatabase.getInstance();
-        refGeo = firebaseDatabase.getReference("Geo Locations");
+        refGeo = firebaseDatabase.getReference("GeoLocations");
         GeoFire geoFire = new GeoFire(refGeo);
-        geoFire.setLocation(code, new GeoLocation(lat, lon));
-
+        geoFire.setLocation(code,new GeoLocation(lat, lon));
         /*
         Geocoder geocoder = new Geocoder(this);
         if(geocoder.isPresent()){
             try {
-                List<Address>addresses = geocoder.getFromLocation(lat,lon,5);
+                List<Address> addresses = geocoder.getFromLocation(lat,lon,0);
                 if(addresses.size() == 0){
                     Toast.makeText(this,"Place not found",Toast.LENGTH_LONG).show();
                     return;
                 }
                 Address address = addresses.get(0);
                 firebaseDatabase = FirebaseDatabase.getInstance();
-                refGeo = firebaseDatabase.getReference("Geo Locations");
+                refGeo = firebaseDatabase.getReference("GeoLocations");
                 GeoFire geoFire = new GeoFire(refGeo);
-                geoFire.setLocation(address.getAddressLine(0), new GeoLocation(address.getLatitude(), address.getLongitude()));
+                geoFire.setLocation(address.getPhone(), new GeoLocation(address.getLatitude(), address.getLongitude()));
                 for(int i=0;i<addresses.size();i++){
                     Log.i("PLACES","" + addresses.get(i));
                 }
@@ -399,9 +416,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    public void getPlaceInfo(String URL){
-        PlacesInto info = new PlacesInto();
 
+    public PlaceInformation getPlaceInfo(String URL){
+        PlacesInfo info = new PlacesInfo();
+        PlaceInformation place = new PlaceInformation();
         try{
             String placeDetails = info.execute(URL).get();
             JSONObject jsonObjRoot = new JSONObject(placeDetails);
@@ -415,23 +433,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             String phoneNum = jsonObjRes.getString("formatted_phone_number");
             String address = jsonObjRes.getString("formatted_address");
 
-            MyGeoLocation geoLocation = new MyGeoLocation();
-            geoLocation.setAddress(address);
-            geoLocation.setLat(lat);
-            geoLocation.setLon(lon);
-            geoLocation.setPhoneNum(phoneNum);
-            //Toast.makeText(this,""+address + lat + lon + phoneNum,Toast.LENGTH_LONG).show();
+            place.setLat(lat);
+            place.setLon(lon);
+            place.setPhoneNum(phoneNum);
+            place.setAddress(address);
 
-            //Log.i("TAGS", "" + address + lat + lon + phoneNum);
-            PlacesObjects.add(geoLocation);
         }catch (Exception e){
             e.printStackTrace();
         }
+        return place;
     }
 
 }
 
-class PlacesInto extends AsyncTask<String,Void,String> {
+class PlacesInfo extends AsyncTask<String,Void,String> {
     @Override
     protected String doInBackground(String... prams) {
 
