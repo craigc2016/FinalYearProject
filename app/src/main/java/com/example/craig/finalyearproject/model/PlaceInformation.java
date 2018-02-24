@@ -80,6 +80,6 @@ public class PlaceInformation {
     }
 
     public String toString(){
-        return "Key : " + key + "\nCompanyName : " + companyName + "\nAddress : " + address + "\nPhoneNumber : " + phoneNum + "\nWebsite : " + website + "\nOpeningHours : " + openingHours;
+        return "CompanyName : " + companyName + "\nAddress : " + address + "\nPhoneNumber : " + phoneNum + "\nWebsite : " + website + "\nOpeningHours : " + openingHours;
     }
 }

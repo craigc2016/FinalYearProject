@@ -53,6 +53,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -269,14 +270,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(id == R.id.action_5KM){
             setUpDoubleValue(item.toString());
             setUpFireBase();
-            //Toast.makeText(getBaseContext(),"" + v.get(0),Toast.LENGTH_LONG).show();
-
-
-            //cordinList.add(info);
-            //arrayAdapter.notifyDataSetChanged();
-            //Toast.makeText(getBaseContext(),""+PlacesObjects.get(0),Toast.LENGTH_LONG).show();
-            //Log.i("MYGEO","");
-
         }
         if(id == R.id.action_10KM){
             setUpDoubleValue(item.toString());
@@ -316,6 +309,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 cordinList.add(info);
                 arrayAdapter.notifyDataSetChanged();
                 num = cordinList.size();
+                Log.i("JSON","" + cordinList);
             }
 
             @Override
@@ -398,10 +392,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         map.clear();
         getCurrentLocation();
-        MyGeoLocation geoLocation = (MyGeoLocation) listView.getItemAtPosition(position);
-        lat = geoLocation.getLat();
-        lon = geoLocation.getLon();
-        currentPosName = geoLocation.getKey();
+        PlaceInformation placeInformation = (PlaceInformation) listView.getItemAtPosition(position);
+        lat = placeInformation.getLat();
+        lon = placeInformation.getLon();
+        currentPosName = placeInformation.getCompanyName();
         line = map.addPolyline(new PolylineOptions()
                 .add(new LatLng(lat, lon), new LatLng(mlocation.getLatitude(), mlocation.getLongitude()))
                 .width(5)
@@ -427,17 +421,30 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             JSONObject jsonObjRes = jsonObjRoot.getJSONObject("result");
             JSONObject geometry = jsonObjRes.getJSONObject("geometry");
             JSONObject loc = geometry.getJSONObject("location");
+            JSONObject jsonOpenHours = null;
+            try{
+                jsonOpenHours = jsonObjRes.getJSONObject("opening_hours");
+            }catch (Exception e){
+                e.printStackTrace();
+                place.setOpeningHours("NA");
+            }
+            JSONArray openingArray = jsonOpenHours.getJSONArray("weekday_text");
 
             //Place Details
             double lat = loc.getDouble("lat"),lon = loc.getDouble("lng");
             String phoneNum = jsonObjRes.getString("formatted_phone_number");
             String address = jsonObjRes.getString("formatted_address");
+            String name = jsonObjRes.getString("name");
+            String website = jsonObjRes.getString("website");
+            String openHours = openingArray.getString(6);
 
             place.setLat(lat);
             place.setLon(lon);
-            place.setPhoneNum(phoneNum);
+            place.setCompanyName(name);
             place.setAddress(address);
-
+            place.setPhoneNum(phoneNum);
+            place.setWebsite(website);
+            place.setOpeningHours(openHours);
         }catch (Exception e){
             e.printStackTrace();
         }
