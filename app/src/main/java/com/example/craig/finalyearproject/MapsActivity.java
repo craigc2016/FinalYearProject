@@ -1,6 +1,9 @@
 package com.example.craig.finalyearproject;
 
 import android.Manifest;
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -10,6 +13,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -22,6 +26,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,6 +56,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Downloader;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -66,38 +72,35 @@ import java.util.List;
 import java.util.Vector;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener, ListView.OnItemClickListener {
-    private int num =0;
-    private GoogleMap map;
-    private Location mlocation;
-    private double lat;
-    private double lon;
-    private String currentPosName;
-    private DatabaseReference ref;
-    private FirebaseDatabase database;
-    private FirebaseDatabase firebaseDatabase;
-    private DatabaseReference refGeo;
-    private FirebaseStorage firebaseStorage;
-    private StorageReference storageReference,userRef;
-    private ArrayList cordinList;
-    private ListView listView;
-    private ArrayAdapter arrayAdapter;
-    private double radius;
-    private Polyline line=null;
-    private Toolbar toolbar;
-    private FirebaseUser UserID;
-    private String imageName = "";
-    private ImageView logo;
-    private String url;
-    private TextView title;
-    private String getUserName;
-    private String email;
-    private final static String BASE_URL = "https://maps.googleapis.com/maps/api/place/details/json?";
-    private final static String API_KEY = "AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
-    private static String BUILDCODE = "ChIJndYeak8LZ0gRiZGHpu60cfA";
-    private ArrayList PlacesObjects = new ArrayList();
-    private ArrayList PlacesId;
-    private PlaceInformation info;
-    private static String myKey="";
+     private int num =0;
+     private GoogleMap map;
+     private Location mlocation;
+     private double lat;
+     private double lon;
+     private String currentPosName;
+     private DatabaseReference ref;
+     private FirebaseDatabase database;
+     private FirebaseDatabase firebaseDatabase;
+     private DatabaseReference refGeo;
+     private FirebaseStorage firebaseStorage;
+     private StorageReference storageReference,userRef;
+     private ArrayList cordinList;
+     private ListView listView;
+     private ArrayAdapter arrayAdapter;
+     private double radius;
+     private Polyline line=null;
+     private Toolbar toolbar;
+     private FirebaseUser UserID;
+     private String imageName = "";
+     private ImageView logo;
+     private String url;
+     private TextView title;
+     private String getUserName;
+     private String email;
+     private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place/details/json?";
+     private static final String API_KEY = "AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
+     private PlaceInformation info;
+     private String placeDetails = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,6 +111,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         listView = (ListView) findViewById(R.id.list);
+
         cordinList = new ArrayList();
         listView.setOnItemClickListener(this);
 
@@ -121,25 +125,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         setUpUserName();
         setImageForToolBar();
         initToolBar();
-        //getPlacesId();
 
-    }
-
-    public void getPlacesId(){
-        ref.child("Geo Locations").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot ds : dataSnapshot.getChildren()){
-                    MyGeoLocation g = ds.getValue(MyGeoLocation.class);
-                    Toast.makeText(getBaseContext(),""+g.getKey(),Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
     }
 
     public void setUpUserName(){
@@ -410,12 +396,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
     public PlaceInformation getPlaceInfo(String URL){
-        PlacesInfo info = new PlacesInfo();
         PlaceInformation place = new PlaceInformation();
         try{
-            String placeDetails = info.execute(URL).get();
+            placeDetails = new PlacesInfo().execute(URL).get();
             JSONObject jsonObjRoot = new JSONObject(placeDetails);
 
             JSONObject jsonObjRes = jsonObjRoot.getJSONObject("result");
@@ -451,36 +435,80 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return place;
     }
 
-}
 
-class PlacesInfo extends AsyncTask<String,Void,String> {
-    @Override
-    protected String doInBackground(String... prams) {
-
-        try{
-            URL url = new URL(prams[0]);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.connect();
-
-            InputStream inputStream = connection.getInputStream();
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-
-            int data = inputStreamReader.read();
-            String apiDetails = "";
-            char current;
-
-            while(data != -1){
-                current = (char)data;
-                apiDetails += current;
-                data = inputStreamReader.read();
-            }
-            return apiDetails;
-        }catch (Exception e){
-            e.printStackTrace();
+    private class PlacesInfo extends AsyncTask<String,Integer,String> {
+        private ProgressDialog mProgressDialog;
+        //private AsyncResult listener;
+        public PlacesInfo() {
+            //this.listener = listener;
         }
-        return  null;
-    }
-}
+
+        @Override
+        protected void onPreExecute(){
+            super.onPreExecute();
+            // Create progress dialog
+            mProgressDialog = new ProgressDialog(MapsActivity.this);
+            // Set your progress dialog Title
+            mProgressDialog.setTitle("Progress Bar Tutorial");
+            // Set your progress dialog Message
+            mProgressDialog.setMessage("Downloading, Please Wait!");
+            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setMax(100);
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            // Show progress dialog
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected String doInBackground(String... prams) {
+            try{
+                URL url = new URL(prams[0]);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.connect();
+                int contentLength = connection.getContentLength();
+
+                InputStream inputStream = connection.getInputStream();
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                int data = inputStreamReader.read();
+                String apiDetails = "";
+                char current;
+                long total =0;
+
+                while(data != -1){
+                    current = (char)data;
+                    apiDetails += current;
+                    data = inputStreamReader.read();
+                    //total += data;
+                    //Log.i("PUB","" + total);
+                    //publishProgress((int) (total * 100 / contentLength));
+                }
+                inputStream.close();
+                inputStreamReader.close();
+                return apiDetails;
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... progress) {
+            super.onProgressUpdate(progress);
+            // Update the progress dialog
+            mProgressDialog.setProgress(progress[0]);
+        }
+
+        protected void onPostExecute(String result){
+            super.onPostExecute(result);
+            mProgressDialog.dismiss();
+            //Log.i("RETURN",result);
+            //listener.getResult(result);
+        }
+
+    }//end inner class
+
+}//end outer class
+
 
 
 
