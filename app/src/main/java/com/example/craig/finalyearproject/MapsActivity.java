@@ -17,6 +17,7 @@ import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -62,45 +63,45 @@ import com.squareup.picasso.Picasso;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
+
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener, ListView.OnItemClickListener {
-     private int num =0;
-     private GoogleMap map;
-     private Location mlocation;
-     private double lat;
-     private double lon;
-     private String currentPosName;
-     private DatabaseReference ref;
-     private FirebaseDatabase database;
-     private FirebaseDatabase firebaseDatabase;
-     private DatabaseReference refGeo;
-     private FirebaseStorage firebaseStorage;
-     private StorageReference storageReference,userRef;
-     private ArrayList cordinList;
-     private ListView listView;
-     private ArrayAdapter arrayAdapter;
-     private double radius;
-     private Polyline line=null;
-     private Toolbar toolbar;
-     private FirebaseUser UserID;
-     private String imageName = "";
-     private ImageView logo;
-     private String url;
-     private TextView title;
-     private String getUserName;
-     private String email;
-     private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place/details/json?";
-     private static final String API_KEY = "AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
-     private PlaceInformation info;
-     private String placeDetails = "";
+
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener {
+    private int num =0;
+    private GoogleMap map;
+    private Location mlocation;
+    private double lat;
+    private double lon;
+    private String currentPosName;
+    private DatabaseReference ref;
+    private FirebaseDatabase database;
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference refGeo;
+    private FirebaseStorage firebaseStorage;
+    private StorageReference storageReference,userRef;
+    private ArrayList cordinList;
+    private ListView listView;
+    private MyCustomAdapter arrayAdapter;
+    private double radius;
+    private Polyline line=null;
+    private Toolbar toolbar;
+    private FirebaseUser UserID;
+    private String imageName = "";
+    private ImageView logo;
+    private String url;
+    private TextView title;
+    private String getUserName;
+    private String email;
+    private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place/details/json?";
+    private static final String API_KEY = "AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
+    private PlaceInformation info;
+    private String placeDetails = "";
+    private static int count=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,9 +112,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         listView = (ListView) findViewById(R.id.list);
-
         cordinList = new ArrayList();
-        listView.setOnItemClickListener(this);
 
         firebaseStorage = FirebaseStorage.getInstance();
         firebaseDatabase = FirebaseDatabase.getInstance();
@@ -277,7 +276,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         refGeo = firebaseDatabase.getReference("GeoLocations");
         GeoFire geoFire = new GeoFire(refGeo);
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(mlocation.getLatitude(),mlocation.getLongitude()),radius);
-        arrayAdapter = new ArrayAdapter(getBaseContext(),android.R.layout.simple_list_item_1,cordinList);
+        arrayAdapter = new MyCustomAdapter(getBaseContext(),android.R.layout.simple_list_item_1,cordinList,MapsActivity.this);
         listView.setAdapter(arrayAdapter);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
@@ -293,8 +292,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String url = BASE_URL + "placeid=" + key + "&key=" + API_KEY;
                 info = getPlaceInfo(url);
                 cordinList.add(info);
-                arrayAdapter.notifyDataSetChanged();
                 num = cordinList.size();
+                arrayAdapter.notifyDataSetChanged();
                 Log.i("JSON","" + cordinList);
             }
 
@@ -374,8 +373,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         radius = Double.parseDouble(newItem[0].toString());
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    public void getPlaceOnMap(int position){
         map.clear();
         getCurrentLocation();
         PlaceInformation placeInformation = (PlaceInformation) listView.getItemAtPosition(position);
@@ -398,6 +396,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public PlaceInformation getPlaceInfo(String URL){
         PlaceInformation place = new PlaceInformation();
+
         try{
             placeDetails = new PlacesInfo().execute(URL).get();
             JSONObject jsonObjRoot = new JSONObject(placeDetails);
@@ -413,6 +412,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 place.setOpeningHours("NA");
             }
             JSONArray openingArray = jsonOpenHours.getJSONArray("weekday_text");
+            JSONArray photoArray = jsonObjRes.getJSONArray("photos");
+            JSONObject photoObj = photoArray.getJSONObject(0);
 
             //Place Details
             double lat = loc.getDouble("lat"),lon = loc.getDouble("lng");
@@ -421,6 +422,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             String name = jsonObjRes.getString("name");
             String website = jsonObjRes.getString("website");
             String openHours = openingArray.getString(6);
+            String photo = photoObj.getString("photo_reference");
 
             place.setLat(lat);
             place.setLon(lon);
@@ -429,6 +431,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             place.setPhoneNum(phoneNum);
             place.setWebsite(website);
             place.setOpeningHours(openHours);
+            place.setPhoto(photo);
         }catch (Exception e){
             e.printStackTrace();
         }

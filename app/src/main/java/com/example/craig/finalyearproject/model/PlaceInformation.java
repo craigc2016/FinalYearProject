@@ -13,6 +13,8 @@ public class PlaceInformation {
     private String address;
     private double lat;
     private double lon;
+    private String photo;
+    private int position;
 
     public double getLat() {
         return lat;
@@ -77,6 +79,22 @@ public class PlaceInformation {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
     }
 
     public String toString(){
