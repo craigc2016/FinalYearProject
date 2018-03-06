@@ -31,6 +31,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.akexorcist.googledirection.DirectionCallback;
+import com.akexorcist.googledirection.GoogleDirection;
+import com.akexorcist.googledirection.constant.TransportMode;
+import com.akexorcist.googledirection.model.Direction;
+import com.akexorcist.googledirection.model.Route;
+import com.akexorcist.googledirection.util.DirectionConverter;
 import com.example.craig.finalyearproject.model.AddressDialog;
 import com.example.craig.finalyearproject.model.MyGeoLocation;
 import com.example.craig.finalyearproject.model.PlaceInformation;
@@ -44,6 +50,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -71,7 +78,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener,DirectionCallback {
     private int num =0;
     private GoogleMap map;
     private Location mlocation;
@@ -101,7 +108,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String API_KEY = "AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
     private PlaceInformation info;
     private String placeDetails = "";
-    private static int count=0;
+    private String serverKey = "AIzaSyDhnV49D80UcbnguzDkXyyV1nQQsh97l1c";
+    //private LatLng origin = new LatLng(mlocation.getLatitude(), mlocation.getLongitude());
+    private LatLng origin;
+    private LatLng destination;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -189,7 +199,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
         getCurrentLocation();
+        //Log.i("MYLOCATION","LAT&LON" + mlocation.getLatitude() + mlocation.getLongitude());
     }
+
 
     private void getCurrentLocation(){
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -377,14 +389,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.clear();
         getCurrentLocation();
         PlaceInformation placeInformation = (PlaceInformation) listView.getItemAtPosition(position);
-        lat = placeInformation.getLat();
-        lon = placeInformation.getLon();
+
+        double mylat = placeInformation.getLat();
+        double mylon = placeInformation.getLon();
+        origin = new LatLng(lat,lon);
+        destination = new LatLng(mylat,mylon);
         currentPosName = placeInformation.getCompanyName();
+        GoogleDirection.withServerKey(serverKey)
+                .from(origin)
+                .to(destination)
+                .transitMode(TransportMode.DRIVING)
+                .execute(this);
+
+        /*
         line = map.addPolyline(new PolylineOptions()
                 .add(new LatLng(lat, lon), new LatLng(mlocation.getLatitude(), mlocation.getLongitude()))
                 .width(5)
                 .color(Color.RED));
         moveMap();
+        */
     }
 
     public void checkListSize(){
@@ -436,6 +459,31 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             e.printStackTrace();
         }
         return place;
+    }
+
+    @Override
+    public void onDirectionSuccess(Direction direction, String rawBody) {
+        if(direction.isOK()){
+            Route route = direction.getRouteList().get(0);
+            map.addMarker(new MarkerOptions().position(origin)).setTitle(currentPosName);
+            map.addMarker(new MarkerOptions().position(destination));
+
+            ArrayList<LatLng> directionPositionList = route.getLegList().get(0).getDirectionPoint();
+            map.addPolyline(DirectionConverter.createPolyline(this, directionPositionList, 5, Color.RED));
+            setCameraWithCoordinationBounds(route);
+        }
+    }
+
+    @Override
+    public void onDirectionFailure(Throwable t) {
+        Toast.makeText(this,"ERROR OCCURED",Toast.LENGTH_LONG).show();
+    }
+
+    private void setCameraWithCoordinationBounds(Route route) {
+        LatLng southwest = route.getBound().getSouthwestCoordination().getCoordination();
+        LatLng northeast = route.getBound().getNortheastCoordination().getCoordination();
+        LatLngBounds bounds = new LatLngBounds(southwest, northeast);
+        map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
     }
 
 
