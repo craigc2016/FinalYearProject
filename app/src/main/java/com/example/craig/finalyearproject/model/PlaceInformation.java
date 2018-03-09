@@ -15,6 +15,14 @@ public class PlaceInformation {
     private double lon;
     private String photo;
     private int position;
+    private String openNow;
+    public String getOpenNow() {
+        return openNow;
+    }
+
+    public void setOpenNow(String openNow) {
+        this.openNow = openNow;
+    }
 
     public double getLat() {
         return lat;
@@ -98,6 +106,6 @@ public class PlaceInformation {
     }
 
     public String toString(){
-        return "CompanyName : " + companyName + "\nAddress : " + address + "\nPhoneNumber : " + phoneNum + "\nWebsite : " + website + "\nOpeningHours : " + openingHours;
+        return "CompanyName : " + companyName + "\nAddress : " + address + "\nPhoneNumber : " + phoneNum + "\nWebsite : " + website + "\nOpen : " + openNow + "\nOpeningHours " + openingHours;
     }
 }

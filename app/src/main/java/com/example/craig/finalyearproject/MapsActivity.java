@@ -78,13 +78,14 @@ import java.net.URL;
 import java.util.ArrayList;
 
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener,DirectionCallback {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener,DirectionCallback{
     private int num =0;
     private GoogleMap map;
     private Location mlocation;
     private double lat;
     private double lon;
     private String currentPosName;
+    private String companyName;
     private DatabaseReference ref;
     private FirebaseDatabase database;
     private FirebaseDatabase firebaseDatabase;
@@ -250,7 +251,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         checkListSize();
-
+        map.clear();
+        getCurrentLocation();
         if(id == R.id.action_fileUpload){
             startActivity(new Intent(this,UploadActivity.class));
             finish();
@@ -303,10 +305,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 String url = BASE_URL + "placeid=" + key + "&key=" + API_KEY;
                 info = getPlaceInfo(url);
+                Log.i("CORDIN","" + cordinList);
                 cordinList.add(info);
                 num = cordinList.size();
                 arrayAdapter.notifyDataSetChanged();
-                Log.i("JSON","" + cordinList);
+
             }
 
             @Override
@@ -389,16 +392,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.clear();
         getCurrentLocation();
         PlaceInformation placeInformation = (PlaceInformation) listView.getItemAtPosition(position);
-
         double mylat = placeInformation.getLat();
         double mylon = placeInformation.getLon();
         origin = new LatLng(lat,lon);
         destination = new LatLng(mylat,mylon);
-        currentPosName = placeInformation.getCompanyName();
+        companyName = placeInformation.getCompanyName();
         GoogleDirection.withServerKey(serverKey)
                 .from(origin)
                 .to(destination)
-                .transitMode(TransportMode.DRIVING)
+                .transitMode(TransportMode.WALKING)
                 .execute(this);
 
         /*
@@ -427,24 +429,27 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             JSONObject jsonObjRes = jsonObjRoot.getJSONObject("result");
             JSONObject geometry = jsonObjRes.getJSONObject("geometry");
             JSONObject loc = geometry.getJSONObject("location");
-            JSONObject jsonOpenHours = null;
-            try{
-                jsonOpenHours = jsonObjRes.getJSONObject("opening_hours");
-            }catch (Exception e){
-                e.printStackTrace();
-                place.setOpeningHours("NA");
-            }
+            JSONObject jsonOpenHours = jsonObjRes.optJSONObject("opening_hours");
             JSONArray openingArray = jsonOpenHours.getJSONArray("weekday_text");
             JSONArray photoArray = jsonObjRes.getJSONArray("photos");
             JSONObject photoObj = photoArray.getJSONObject(0);
-
+            boolean openNow = jsonOpenHours.getBoolean("open_now");
+            String openNowStr = "";
+            if (openNow == true){
+                openNowStr = "YES";
+            }else {
+                openNowStr = "NO";
+            }
             //Place Details
             double lat = loc.getDouble("lat"),lon = loc.getDouble("lng");
             String phoneNum = jsonObjRes.getString("formatted_phone_number");
             String address = jsonObjRes.getString("formatted_address");
             String name = jsonObjRes.getString("name");
             String website = jsonObjRes.getString("website");
-            String openHours = openingArray.getString(6);
+            String openHours="";
+            for(int i =0;i<openingArray.length();i++){
+                openHours += "\n" + openingArray.getString(i);
+            }
             String photo = photoObj.getString("photo_reference");
 
             place.setLat(lat);
@@ -455,9 +460,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             place.setWebsite(website);
             place.setOpeningHours(openHours);
             place.setPhoto(photo);
+            place.setOpenNow(openNowStr);
         }catch (Exception e){
             e.printStackTrace();
         }
+        Log.i("PLACE",""+ place);
         return place;
     }
 
@@ -465,9 +472,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onDirectionSuccess(Direction direction, String rawBody) {
         if(direction.isOK()){
             Route route = direction.getRouteList().get(0);
-            map.addMarker(new MarkerOptions().position(origin)).setTitle(currentPosName);
-            map.addMarker(new MarkerOptions().position(destination));
-
+            map.addMarker(new MarkerOptions().position(origin));
+            map.addMarker(new MarkerOptions().position(destination)).setTitle(companyName);
             ArrayList<LatLng> directionPositionList = route.getLegList().get(0).getDirectionPoint();
             map.addPolyline(DirectionConverter.createPolyline(this, directionPositionList, 5, Color.RED));
             setCameraWithCoordinationBounds(route);
@@ -500,14 +506,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Create progress dialog
             mProgressDialog = new ProgressDialog(MapsActivity.this);
             // Set your progress dialog Title
-            mProgressDialog.setTitle("Progress Bar Tutorial");
+            mProgressDialog.setTitle("Download Screen");
             // Set your progress dialog Message
             mProgressDialog.setMessage("Downloading, Please Wait!");
-            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setIndeterminate(true);
             mProgressDialog.setMax(100);
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             // Show progress dialog
-            mProgressDialog.show();
+            //mProgressDialog.show();
         }
 
         @Override
@@ -529,12 +535,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     current = (char)data;
                     apiDetails += current;
                     data = inputStreamReader.read();
-                    //total += data;
+                    total += data;
                     //Log.i("PUB","" + total);
-                    //publishProgress((int) (total * 100 / contentLength));
+                    //publishProgress((int)(total * 100 / contentLength));
                 }
                 inputStream.close();
                 inputStreamReader.close();
+                //Toast.makeText(getBaseContext(),"DOWNLOADING INFORMATION",Toast.LENGTH_LONG).show();
                 return apiDetails;
             }catch (Exception e){
                 e.printStackTrace();
@@ -551,9 +558,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         protected void onPostExecute(String result){
             super.onPostExecute(result);
-            mProgressDialog.dismiss();
-            //Log.i("RETURN",result);
             //listener.getResult(result);
+            //mProgressDialog.dismiss();
         }
 
     }//end inner class
