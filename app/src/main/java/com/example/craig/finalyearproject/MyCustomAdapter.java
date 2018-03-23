@@ -1,6 +1,7 @@
 package com.example.craig.finalyearproject;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -27,6 +28,7 @@ public class MyCustomAdapter extends ArrayAdapter {
     private ArrayList list;
     private final static String BASE_URL = "https://maps.googleapis.com/maps/api/place/photo?photoreference=";
     private static String PHOTO_REF = "&maxheight=200&maxwidth=200&key=AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
+    private static final String IMAGE_NOT_FOUND = "https://gaygeekgab.files.wordpress.com/2015/05/wpid-photo-317.png";
     private Context context;
     private MapsActivity MyMap;
     private PlaceInformation info;
@@ -37,7 +39,7 @@ public class MyCustomAdapter extends ArrayAdapter {
         this.MyMap = activity;
     }
 
-    public View getView(final int position, final View convertView, ViewGroup parent){
+    public View getView(final int position, final View convertView, final ViewGroup parent){
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View customView = inflater.inflate(R.layout.custom_row,parent,false);
         ImageButton mapButton = (ImageButton) customView.findViewById(R.id.imageButton1);
@@ -61,7 +63,14 @@ public class MyCustomAdapter extends ArrayAdapter {
         msgButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String username = MyMap.getUserName();
+                String companyName = info.getCompanyName();
                 Toast.makeText(getContext(),"MESSAGING FEATURE",Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(context,MessageActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.putExtra("Username",username);
+                intent.putExtra("CompanyName",companyName);
+                getContext().startActivity(intent);
             }
         });
 

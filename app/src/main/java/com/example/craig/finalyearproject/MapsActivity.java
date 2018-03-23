@@ -5,15 +5,19 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -45,6 +49,15 @@ import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -54,7 +67,9 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -78,8 +93,8 @@ import java.net.URL;
 import java.util.ArrayList;
 
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,AddressDialog.AddressDialogListener,DirectionCallback{
-    private int num =0;
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, AddressDialog.AddressDialogListener, DirectionCallback {
+    private int num = 0;
     private GoogleMap map;
     private Location mlocation;
     private double lat;
@@ -91,28 +106,30 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference refGeo;
     private FirebaseStorage firebaseStorage;
-    private StorageReference storageReference,userRef;
+    private StorageReference storageReference, userRef;
     private ArrayList cordinList;
     private ListView listView;
     private MyCustomAdapter arrayAdapter;
     private double radius;
-    private Polyline line=null;
+    private Polyline line = null;
     private Toolbar toolbar;
     private FirebaseUser UserID;
     private String imageName = "";
     private ImageView logo;
     private String url;
     private TextView title;
-    private String getUserName;
+    private static String getUserName;
     private String email;
     private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place/details/json?";
     private static final String API_KEY = "AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
     private PlaceInformation info;
     private String placeDetails = "";
-    private String serverKey = "AIzaSyDhnV49D80UcbnguzDkXyyV1nQQsh97l1c";
+    private static final String SERVERKEY = "AIzaSyDhnV49D80UcbnguzDkXyyV1nQQsh97l1c";
     //private LatLng origin = new LatLng(mlocation.getLatitude(), mlocation.getLongitude());
     private LatLng origin;
     private LatLng destination;
+    private static final String IMAGE_NOT_FOUND = "https://gaygeekgab.files.wordpress.com/2015/05/wpid-photo-317.png";
+    private FusedLocationProviderClient mFusedLocationClient;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -132,21 +149,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         ref = database.getReference();
         UserID = FirebaseAuth.getInstance().getCurrentUser();
         userRef = storageReference.child(UserID.getUid());
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         setUpUserName();
         setImageForToolBar();
         initToolBar();
-
     }
 
-    public void setUpUserName(){
+    public void setUpUserName() {
         email = UserID.getEmail().toLowerCase();
         //Query query = ref.child("UsernameInfo");
         ref.child("UserName").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot ds : dataSnapshot.getChildren()){
+                for (DataSnapshot ds : dataSnapshot.getChildren()) {
                     UsernameInfo usernameInfo = ds.getValue(UsernameInfo.class);
-                    if(email.equals(usernameInfo.getEmail().toLowerCase())){
+                    if (email.equals(usernameInfo.getEmail().toLowerCase())) {
                         getUserName = usernameInfo.getUsername();
                         title.setText(getUserName);
                         break;
@@ -161,20 +178,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    public void setImageForToolBar(){
+    public static String getUserName(){
+        return getUserName;
+    }
+
+    public void setImageForToolBar() {
         userRef.child("profile").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
-                try{
+                try {
                     url = uri.toString();
                     Picasso.with(MapsActivity.this).load(url).resize(100, 100).centerCrop().into(logo);
-                }catch (Exception e){
-                    Toast.makeText(getApplication(),"Error while connecting to url" + url,Toast.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    Toast.makeText(getApplication(), "Error while connecting to url" + url, Toast.LENGTH_LONG).show();
                     return;
                 }
             }
         });
     }
+
     public void initToolBar() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -200,25 +222,31 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
         getCurrentLocation();
-        //Log.i("MYLOCATION","LAT&LON" + mlocation.getLatitude() + mlocation.getLongitude());
     }
 
 
     private void getCurrentLocation(){
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(getApplicationContext(),"Error permissions not granted",Toast.LENGTH_LONG).show();
+            map.setMyLocationEnabled(true);
             return;
         }
-        LocationManager locationManager = (LocationManager) getApplication().getSystemService(LOCATION_SERVICE);
-        mlocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        // Add a marker for your current loction
-        LatLng dublin = new LatLng(mlocation.getLatitude() ,mlocation.getLongitude());
-        map.addMarker(new MarkerOptions().position(dublin).title("Current Location"));
-        map.moveCamera(CameraUpdateFactory.newLatLng(dublin));
-        map.animateCamera(CameraUpdateFactory.zoomTo(15));
-        lat = mlocation.getLatitude();
-        lon = mlocation.getLongitude();
+
+        mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            LatLng dublin = new LatLng(location.getLatitude() ,location.getLongitude());
+                            map.addMarker(new MarkerOptions().position(dublin).title("Current Location"));
+                            map.moveCamera(CameraUpdateFactory.newLatLng(dublin));
+                            map.animateCamera(CameraUpdateFactory.zoomTo(15));
+                            lat = location.getLatitude();
+                            lon = location.getLongitude();
+                        }
+                    }
+                });
     }
 
     private void moveMap() {
@@ -260,6 +288,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if(id == R.id.action_getCurrentPosition){
             getCurrentLocation();
+            Log.i("MYLOC","" + lat + lon);
             moveMap();
         }
         if (id == R.id.action_address) {
@@ -286,10 +315,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void setUpFireBase(){
-
         refGeo = firebaseDatabase.getReference("GeoLocations");
         GeoFire geoFire = new GeoFire(refGeo);
-        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(mlocation.getLatitude(),mlocation.getLongitude()),radius);
+        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(lat,lon),radius);
         arrayAdapter = new MyCustomAdapter(getBaseContext(),android.R.layout.simple_list_item_1,cordinList,MapsActivity.this);
         listView.setAdapter(arrayAdapter);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
@@ -397,7 +425,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         origin = new LatLng(lat,lon);
         destination = new LatLng(mylat,mylon);
         companyName = placeInformation.getCompanyName();
-        GoogleDirection.withServerKey(serverKey)
+        GoogleDirection.withServerKey(SERVERKEY)
                 .from(origin)
                 .to(destination)
                 .transitMode(TransportMode.WALKING)
@@ -431,8 +459,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             JSONObject loc = geometry.getJSONObject("location");
             JSONObject jsonOpenHours = jsonObjRes.optJSONObject("opening_hours");
             JSONArray openingArray = jsonOpenHours.getJSONArray("weekday_text");
-            JSONArray photoArray = jsonObjRes.getJSONArray("photos");
-            JSONObject photoObj = photoArray.getJSONObject(0);
+            JSONArray photoArray;
+            JSONObject photoObj = null;
+            String photo;
+            try{
+                photoArray = jsonObjRes.getJSONArray("photos");
+                photoObj = photoArray.getJSONObject(0);
+            }catch (Exception e){
+                photo = IMAGE_NOT_FOUND;
+                Log.i("ERRORI",photo);
+                e.printStackTrace();
+            }
+
+            photo = photoObj.getString("photo_reference");
             boolean openNow = jsonOpenHours.getBoolean("open_now");
             String openNowStr = "";
             if (openNow == true){
@@ -450,7 +489,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             for(int i =0;i<openingArray.length();i++){
                 openHours += "\n" + openingArray.getString(i);
             }
-            String photo = photoObj.getString("photo_reference");
+            Log.i("MYPHOTO",photo);
+            if(photo == null){
+                photo = IMAGE_NOT_FOUND;
+            }
 
             place.setLat(lat);
             place.setLon(lon);
@@ -491,6 +533,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLngBounds bounds = new LatLngBounds(southwest, northeast);
         map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
     }
+
 
 
     private class PlacesInfo extends AsyncTask<String,Integer,String> {
