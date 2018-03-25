@@ -3,27 +3,47 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
-
+    <item android:id="@+id/settings"
+        android:icon="@drawable/menu"
+        android:title="@string/action_settings"
+        app:showAsAction="always">
+        <menu>
     <item android:id="@+id/action_fileUpload"
+        android:icon="@drawable/profile"
         android:title="@string/action_GoToFileUpload"
-        android:orderInCategory="101" app:showAsAction="never" />
+        android:orderInCategory="101"
+        app:showAsAction="always"/>
+
     <item android:id="@+id/action_getCurrentPosition"
         android:title="@string/action_getCurrentPosition"
-        android:orderInCategory="101" app:showAsAction="never" />
+        android:icon="@drawable/location"
+        android:orderInCategory="101"
+        app:showAsAction="always"/>
     <item android:id="@+id/action_address"
         android:title="@string/action_address"
-        android:orderInCategory="101" app:showAsAction="never" />
+        android:orderInCategory="101"
+        app:showAsAction="never" />
     <item android:id="@+id/action_5KM"
         android:title="@string/action_5KM"
-        android:orderInCategory="101" app:showAsAction="never" />
+        android:icon="@drawable/mapicon"
+        android:orderInCategory="101"
+        app:showAsAction="always" />
     <item android:id="@+id/action_10KM"
         android:title="@string/action_10KM"
-        android:orderInCategory="101" app:showAsAction="never" />
+        android:icon="@drawable/mapicon"
+        android:orderInCategory="101"
+        app:showAsAction="always" />
     <item android:id="@+id/action_15KM"
+        android:icon="@drawable/mapicon"
         android:title="@string/action_15KM"
-        android:orderInCategory="101" app:showAsAction="never" />
+        android:orderInCategory="101"
+        app:showAsAction="always" />
     <item android:id="@+id/action_logout"
         android:title="@string/action_Logout"
-        android:orderInCategory="101" app:showAsAction="never" />
+        android:icon="@drawable/logout"
+        android:orderInCategory="101"
+        app:showAsAction="always" />
 
+        </menu>
+    </item>
 </menu>

@@ -130,6 +130,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LatLng destination;
     private static final String IMAGE_NOT_FOUND = "https://gaygeekgab.files.wordpress.com/2015/05/wpid-photo-317.png";
     private FusedLocationProviderClient mFusedLocationClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -235,18 +236,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (location != null) {
-                            LatLng dublin = new LatLng(location.getLatitude() ,location.getLongitude());
-                            map.addMarker(new MarkerOptions().position(dublin).title("Current Location"));
-                            map.moveCamera(CameraUpdateFactory.newLatLng(dublin));
-                            map.animateCamera(CameraUpdateFactory.zoomTo(15));
-                            lat = location.getLatitude();
-                            lon = location.getLongitude();
-                        }
-                    }
-                });
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    LatLng dublin = new LatLng(location.getLatitude() ,location.getLongitude());
+                    map.addMarker(new MarkerOptions().position(dublin).title("Current Location"));
+                    map.moveCamera(CameraUpdateFactory.newLatLng(dublin));
+                    map.animateCamera(CameraUpdateFactory.zoomTo(15));
+                    lat = location.getLatitude();
+                    lon = location.getLongitude();
+                }
+            }
+        });
     }
 
     private void moveMap() {
@@ -324,13 +325,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
 
-                lat = location.latitude;
-                lon = location.longitude;
-                MyGeoLocation geoL = new MyGeoLocation();
-                geoL.setKey(key);
-                geoL.setLat(lat);
-                geoL.setLon(lon);
-
                 String url = BASE_URL + "placeid=" + key + "&key=" + API_KEY;
                 info = getPlaceInfo(url);
                 Log.i("CORDIN","" + cordinList);
@@ -397,7 +391,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 for(int i=0;i<addresses.size();i++){
                     Log.i("PLACES","" + addresses.get(i));
                 }
-
             } catch (IOException e) {
                 Toast.makeText(this,"Network to geocoder not working",Toast.LENGTH_LONG).show();
             }catch (IllegalArgumentException e){
@@ -608,7 +601,3 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }//end inner class
 
 }//end outer class
-
-
-
-

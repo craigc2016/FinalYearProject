@@ -41,6 +41,7 @@ public class MessageActivity extends AppCompatActivity {
     public void displayMessages(){
         ListView listOfMessages = (ListView)findViewById(R.id.list_of_messages);
 
+
         adapter = new FirebaseListAdapter<ChatMessage>(this, ChatMessage.class,
                 R.layout.message, FirebaseDatabase.getInstance().getReference().child("Messages").child(companyName)) {
             @Override
@@ -59,7 +60,6 @@ public class MessageActivity extends AppCompatActivity {
                         model.getMessageTime()));
             }
         };
-
         listOfMessages.setAdapter(adapter);
     }
 }

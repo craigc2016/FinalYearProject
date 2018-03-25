@@ -7,8 +7,9 @@
     <string name="action_5KM">5KM</string>
     <string name="action_10KM">10KM</string>
     <string name="action_15KM">15KM</string>
-    <string name="action_getCurrentPosition">Get Current Address</string>
+    <string name="action_getCurrentPosition">Get My Location</string>
     <string name="action_GoToMaps">Go to maps</string>
-    <string name="action_GoToFileUpload">Go to file upload</string>
+    <string name="action_GoToFileUpload">Profile</string>
     <string name="action_Logout">Logout</string>
+    <string name="action_settings">Settings</string>
 </resources>

@@ -4,34 +4,6 @@
     android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ImageButton
-        android:id="@+id/imageButton3"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:src="@drawable/booking"
-        app:srcCompat="@drawable/common_full_open_on_phone"
-        android:layout_alignTop="@+id/imageButton2"
-        android:layout_toEndOf="@+id/imageButton2"
-        android:layout_marginStart="10dp"/>
-
-    <ImageButton
-        android:id="@+id/imageButton2"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginStart="10dp"
-        android:src="@drawable/message"
-        app:srcCompat="@drawable/common_full_open_on_phone"
-        android:layout_alignTop="@+id/imageButton1"
-        android:layout_toEndOf="@+id/imageButton1" />
-
-    <ImageButton
-        android:id="@+id/imageButton1"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:src="@drawable/mapicon"
-        android:layout_below="@+id/image"
-        android:layout_marginTop="13dp"
-        app:srcCompat="@drawable/common_full_open_on_phone" />
 
     <ImageView
         android:id="@+id/image"
@@ -46,4 +18,42 @@
         android:layout_alignParentTop="true"
         android:layout_toEndOf="@+id/image" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_below="@+id/image"
+        android:layout_alignParentStart="true">
+
+        <ImageButton
+            android:id="@+id/imageButton1"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="10dp"
+            android:src="@drawable/mapicon"
+            app:srcCompat="@drawable/common_full_open_on_phone"
+            />
+
+        <ImageButton
+            android:id="@+id/imageButton2"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:src="@drawable/message"
+            app:srcCompat="@drawable/common_full_open_on_phone"
+            android:layout_alignTop="@+id/imageButton1"
+            android:layout_toEndOf="@+id/imageButton1" />
+        <ImageButton
+            android:id="@+id/imageButton3"
+            android:layout_width="50dp"
+            android:layout_marginTop="10dp"
+            android:layout_height="50dp"
+            android:src="@drawable/booking"
+            app:srcCompat="@drawable/common_full_open_on_phone"
+            android:layout_alignTop="@+id/imageButton2"
+            android:layout_toEndOf="@+id/imageButton2"
+            android:layout_marginStart="20dp"/>
+    </LinearLayout>
 </RelativeLayout>
