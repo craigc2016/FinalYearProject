@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-
 android {
     compileSdkVersion 'Google Inc.:Google APIs:24'
     buildToolsVersion "25.0.2"
@@ -10,6 +9,9 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders = [onesignal_app_id: "2b2f27d6-facb-4c36-b5d9-d12e33244e02",
+                                // Project number pulled from dashboard, local value is ignored.
+                                onesignal_google_project_number: "REMOTE"]
     }
     buildTypes {
         release {
@@ -27,29 +29,22 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support:support-v4:24.2.1'
-    compile 'com.android.support:recyclerview-v7:24.2.1'
+    compile 'com.android.support:support-v4:25.3.1'
+    compile 'com.android.support:recyclerview-v7:25.3.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.google.firebase:firebase-auth:11.0.1'
     compile 'com.google.firebase:firebase-storage:11.0.1'
     compile 'com.google.firebase:firebase-database:11.0.1'
     compile 'com.google.android.gms:play-services-places:11.0.1'
     compile 'com.google.android.gms:play-services-location:11.0.1'
+    compile 'com.google.android.gms:play-services-gcm:11.0.1'
     compile 'com.firebase:geofire-android:2.1.3'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.akexorcist:googledirectionlibrary:1.0.4'
     compile 'com.google.firebase:firebase-messaging:11.0.1'
     compile 'com.android.support:design:24.2.0'
     compile 'com.firebaseui:firebase-ui:0.6.0'
+    compile 'com.onesignal:OneSignal:3.4.3@aar'
     testCompile 'junit:junit:4.12'
 }
-
-
-
-
-
-
-
-
-
 apply plugin: 'com.google.gms.google-services'

@@ -15,6 +15,8 @@ public class PlaceInformation {
     private double lon;
     private String photo;
     private int position;
+
+    private boolean isChecked;
     private String openNow;
     public String getOpenNow() {
         return openNow;
@@ -104,6 +106,15 @@ public class PlaceInformation {
     public void setPosition(int position) {
         this.position = position;
     }
+
+    public boolean isChecked() {
+        return isChecked;
+    }
+
+    public void setChecked(boolean checked) {
+        isChecked = checked;
+    }
+
 
     public String toString(){
         return "CompanyName : " + companyName + "\nAddress : " + address + "\nPhoneNumber : " + phoneNum + "\nWebsite : " + website + "\nOpen : " + openNow + "\nOpeningHours " + openingHours;

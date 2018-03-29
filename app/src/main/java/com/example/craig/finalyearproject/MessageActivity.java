@@ -13,6 +13,7 @@ import android.widget.TextView;
 import com.firebase.ui.database.FirebaseListAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
+import com.onesignal.OneSignal;
 
 public class MessageActivity extends AppCompatActivity {
     private FirebaseListAdapter<ChatMessage> adapter;
@@ -26,6 +27,7 @@ public class MessageActivity extends AppCompatActivity {
         final String username = intent.getStringExtra("Username");
         final String CompanyName = intent.getStringExtra("CompanyName");
         companyName = intent.getStringExtra("CompanyName");
+
         displayMessages();
         button.setOnClickListener(new View.OnClickListener() {
             @Override

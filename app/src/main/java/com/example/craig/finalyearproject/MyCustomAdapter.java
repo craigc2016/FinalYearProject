@@ -9,8 +9,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,18 +41,18 @@ public class MyCustomAdapter extends ArrayAdapter {
         this.MyMap = activity;
     }
 
-    public View getView(final int position, final View convertView, final ViewGroup parent){
+    public View getView(final int position, View convertView, final ViewGroup parent){
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        View customView = inflater.inflate(R.layout.custom_row,parent,false);
-        ImageButton mapButton = (ImageButton) customView.findViewById(R.id.imageButton1);
-        ImageButton msgButton = (ImageButton) customView.findViewById(R.id.imageButton2);
-        ImageButton bookButton = (ImageButton) customView.findViewById(R.id.imageButton3);
-        ImageView image = (ImageView) customView.findViewById(R.id.image);
+        convertView = inflater.inflate(R.layout.custom_row,parent,false);
+        ImageButton mapButton = (ImageButton)  convertView .findViewById(R.id.imageButton1);
+        ImageButton msgButton = (ImageButton)  convertView .findViewById(R.id.imageButton2);
+        Switch mySwitch = (Switch)  convertView.findViewById(R.id.switch1);
+        ImageView image = (ImageView)  convertView.findViewById(R.id.image);
         info = (PlaceInformation) list.get(position);
         String url = BASE_URL + info.getPhoto()+ PHOTO_REF;
         Picasso.with(getContext()).load(url).into(image);
-        TextView placeInfo = (TextView)  customView.findViewById(R.id.placeInfo);
-        placeInfo.append(""+info);
+        //TextView placeInfo = (TextView)   convertView.findViewById(R.id.placeInfo);
+        //placeInfo.append(""+info);
         mapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -74,12 +76,12 @@ public class MyCustomAdapter extends ArrayAdapter {
             }
         });
 
-        bookButton.setOnClickListener(new View.OnClickListener() {
+        mySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
-                Toast.makeText(getContext(),"BOOKING FEATURE",Toast.LENGTH_LONG).show();
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
             }
         });
-        return customView;
+        return  convertView ;
     }
 }

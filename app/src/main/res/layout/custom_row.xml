@@ -11,49 +11,60 @@
         android:layout_height="wrap_content"
         app:srcCompat="@drawable/common_full_open_on_phone" />
 
-    <TextView
-        android:id="@+id/placeInfo"
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toEndOf="@+id/image" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:id="@+id/linearLayoutText"
+        android:layout_toEndOf="@+id/image">
+
+        <TextView
+            android:id="@+id/placeInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_toEndOf="@+id/image" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id="@+id/linearLayout"
         android:layout_below="@+id/image"
         android:layout_alignParentStart="true">
 
         <ImageButton
             android:id="@+id/imageButton1"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="10dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="5dp"
             android:src="@drawable/mapicon"
-            app:srcCompat="@drawable/common_full_open_on_phone"
-            />
+            app:srcCompat="@drawable/common_full_open_on_phone" />
 
         <ImageButton
             android:id="@+id/imageButton2"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
-            android:src="@drawable/message"
-            app:srcCompat="@drawable/common_full_open_on_phone"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_alignTop="@+id/imageButton1"
-            android:layout_toEndOf="@+id/imageButton1" />
-        <ImageButton
-            android:id="@+id/imageButton3"
-            android:layout_width="50dp"
-            android:layout_marginTop="10dp"
-            android:layout_height="50dp"
-            android:src="@drawable/booking"
-            app:srcCompat="@drawable/common_full_open_on_phone"
-            android:layout_alignTop="@+id/imageButton2"
-            android:layout_toEndOf="@+id/imageButton2"
-            android:layout_marginStart="20dp"/>
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_toEndOf="@+id/imageButton1"
+            android:src="@drawable/message"
+            app:srcCompat="@drawable/common_full_open_on_phone" />
+
     </LinearLayout>
+
+    <Switch
+        android:id="@+id/switch1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/linearLayout"
+        android:layout_marginTop="10dp"
+        android:text="notify" />
+
+
 </RelativeLayout>

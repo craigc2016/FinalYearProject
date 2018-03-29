@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -130,7 +131,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LatLng destination;
     private static final String IMAGE_NOT_FOUND = "https://gaygeekgab.files.wordpress.com/2015/05/wpid-photo-317.png";
     private FusedLocationProviderClient mFusedLocationClient;
-
+    private static final int REQUEST_LOCATION = 2;
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter adapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -140,7 +143,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        listView = (ListView) findViewById(R.id.list);
+        //listView = (ListView) findViewById(R.id.list);
+        recyclerView = (RecyclerView) findViewById(R.id.recycle);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         cordinList = new ArrayList();
 
         firebaseStorage = FirebaseStorage.getInstance();
@@ -179,7 +184,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    public static String getUserName(){
+    public static String getUserName() {
         return getUserName;
     }
 
@@ -226,28 +231,58 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-    private void getCurrentLocation(){
+    private void getCurrentLocation() {
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(getApplicationContext(),"Error permissions not granted",Toast.LENGTH_LONG).show();
-            map.setMyLocationEnabled(true);
-            return;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(getApplicationContext(), "Error permissions not granted", Toast.LENGTH_LONG).show();
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION);
+        } else {
+            mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if (location != null) {
+                        LatLng dublin = new LatLng(location.getLatitude(), location.getLongitude());
+                        map.addMarker(new MarkerOptions().position(dublin).title("Current Location"));
+                        map.moveCamera(CameraUpdateFactory.newLatLng(dublin));
+                        map.animateCamera(CameraUpdateFactory.zoomTo(15));
+                        lat = location.getLatitude();
+                        lon = location.getLongitude();
+                    }
+                }
+            });
         }
 
-        mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                if (location != null) {
-                    LatLng dublin = new LatLng(location.getLatitude() ,location.getLongitude());
-                    map.addMarker(new MarkerOptions().position(dublin).title("Current Location"));
-                    map.moveCamera(CameraUpdateFactory.newLatLng(dublin));
-                    map.animateCamera(CameraUpdateFactory.zoomTo(15));
-                    lat = location.getLatitude();
-                    lon = location.getLongitude();
+    }
+
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions,
+                                           int[] grantResults) {
+        if (requestCode == REQUEST_LOCATION) {
+            if (grantResults.length == 1
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // We can now safely use the API we requested access to
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            if (location != null) {
+                                LatLng dublin = new LatLng(location.getLatitude(), location.getLongitude());
+                                map.addMarker(new MarkerOptions().position(dublin).title("Current Location"));
+                                map.moveCamera(CameraUpdateFactory.newLatLng(dublin));
+                                map.animateCamera(CameraUpdateFactory.zoomTo(15));
+                                lat = location.getLatitude();
+                                lon = location.getLongitude();
+                            }
+                        }
+                    });
                 }
+
+            } else {
+                // Permission was denied or request was cancelled
             }
-        });
+        }
     }
 
     private void moveMap() {
@@ -319,18 +354,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         refGeo = firebaseDatabase.getReference("GeoLocations");
         GeoFire geoFire = new GeoFire(refGeo);
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(lat,lon),radius);
-        arrayAdapter = new MyCustomAdapter(getBaseContext(),android.R.layout.simple_list_item_1,cordinList,MapsActivity.this);
-        listView.setAdapter(arrayAdapter);
+        //arrayAdapter = new MyCustomAdapter(getBaseContext(),android.R.layout.simple_list_item_1,cordinList,MapsActivity.this);
+        //listView.setAdapter(arrayAdapter);
+        adapter = new RecyclerAdapter(cordinList,this,MapsActivity.this);
+        recyclerView.setAdapter(adapter);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
 
                 String url = BASE_URL + "placeid=" + key + "&key=" + API_KEY;
                 info = getPlaceInfo(url);
-                Log.i("CORDIN","" + cordinList);
+                Log.i("CORDIN","" + info);
                 cordinList.add(info);
                 num = cordinList.size();
-                arrayAdapter.notifyDataSetChanged();
+                adapter.notifyDataSetChanged();
 
             }
 
@@ -412,7 +449,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void getPlaceOnMap(int position){
         map.clear();
         getCurrentLocation();
-        PlaceInformation placeInformation = (PlaceInformation) listView.getItemAtPosition(position);
+        PlaceInformation placeInformation = (PlaceInformation) cordinList.get(position);
         double mylat = placeInformation.getLat();
         double mylon = placeInformation.getLon();
         origin = new LatLng(lat,lon);
@@ -436,7 +473,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void checkListSize(){
         if(cordinList.size() > 0){
             cordinList.clear();
-            arrayAdapter.notifyDataSetChanged();
+            adapter.notifyDataSetChanged();
         }
     }
 
