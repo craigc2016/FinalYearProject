@@ -33,6 +33,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,6 +45,7 @@ import com.akexorcist.googledirection.model.Route;
 import com.akexorcist.googledirection.util.DirectionConverter;
 import com.example.craig.finalyearproject.model.AddressDialog;
 import com.example.craig.finalyearproject.model.MyGeoLocation;
+import com.example.craig.finalyearproject.model.MyNotifiy;
 import com.example.craig.finalyearproject.model.PlaceInformation;
 import com.example.craig.finalyearproject.model.UsernameInfo;
 import com.firebase.geofire.GeoFire;
@@ -119,7 +121,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ImageView logo;
     private String url;
     private TextView title;
-    private static String getUserName;
+    private static String UserName;
     private String email;
     private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place/details/json?";
     private static final String API_KEY = "AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
@@ -134,6 +136,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int REQUEST_LOCATION = 2;
     private RecyclerView recyclerView;
     private RecyclerView.Adapter adapter;
+    private ArrayList<MyNotifiy> notifications;
+    private DatabaseReference notificationsRef;
+    private MyNotifiy myNotifiy;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -147,18 +152,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         recyclerView = (RecyclerView) findViewById(R.id.recycle);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         cordinList = new ArrayList();
-
+        notifications = new ArrayList<>();
         firebaseStorage = FirebaseStorage.getInstance();
         firebaseDatabase = FirebaseDatabase.getInstance();
         storageReference = firebaseStorage.getReferenceFromUrl("gs://finalyearproject-894cb.appspot.com");
         database = FirebaseDatabase.getInstance();
         ref = database.getReference();
+        notificationsRef = FirebaseDatabase.getInstance().getReference("Notifications");
         UserID = FirebaseAuth.getInstance().getCurrentUser();
         userRef = storageReference.child(UserID.getUid());
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        notifications = new ArrayList<>();
         setUpUserName();
         setImageForToolBar();
         initToolBar();
+
     }
 
     public void setUpUserName() {
@@ -170,8 +178,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 for (DataSnapshot ds : dataSnapshot.getChildren()) {
                     UsernameInfo usernameInfo = ds.getValue(UsernameInfo.class);
                     if (email.equals(usernameInfo.getEmail().toLowerCase())) {
-                        getUserName = usernameInfo.getUsername();
-                        title.setText(getUserName);
+                        UserName = usernameInfo.getUsername();
+                        title.setText(UserName);
                         break;
                     }
                 }
@@ -185,7 +193,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public static String getUserName() {
-        return getUserName;
+        return UserName;
     }
 
     public void setImageForToolBar() {
@@ -316,7 +324,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         int id = item.getItemId();
         checkListSize();
         map.clear();
-        getCurrentLocation();
         if(id == R.id.action_fileUpload){
             startActivity(new Intent(this,UploadActivity.class));
             finish();
@@ -350,7 +357,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return super.onOptionsItemSelected(item);
     }
 
+    private void getNotifications(){
+        notificationsRef.child(UserName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot ds : dataSnapshot.getChildren()){
+                    MyNotifiy myNotifiy = ds.getValue(MyNotifiy.class);
+                    notifications.add(myNotifiy);
+                    //Log.i("REACHED","HELLO" + notifications);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     private void setUpFireBase(){
+        getNotifications();
         refGeo = firebaseDatabase.getReference("GeoLocations");
         GeoFire geoFire = new GeoFire(refGeo);
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(lat,lon),radius);
@@ -365,6 +391,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String url = BASE_URL + "placeid=" + key + "&key=" + API_KEY;
                 info = getPlaceInfo(url);
                 Log.i("CORDIN","" + info);
+                for (int i = 0;i<notifications.size();i++){
+                    myNotifiy = notifications.get(i);
+                    if(info.getCompanyName().equals(myNotifiy.getCompanyName())){
+                        //place.setChecked(myNotifiy.isSignUp());
+                        info.setChecked(myNotifiy.isSignUp());
+                        //Log.i("MYNOT","" +info.getCompanyName() + info.isChecked());
+                    }
+                }
                 cordinList.add(info);
                 num = cordinList.size();
                 adapter.notifyDataSetChanged();
@@ -519,11 +553,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             for(int i =0;i<openingArray.length();i++){
                 openHours += "\n" + openingArray.getString(i);
             }
-            Log.i("MYPHOTO",photo);
-            if(photo == null){
-                photo = IMAGE_NOT_FOUND;
-            }
-
             place.setLat(lat);
             place.setLon(lon);
             place.setCompanyName(name);

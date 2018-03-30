@@ -14,14 +14,16 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.craig.finalyearproject.model.MyNotifiy;
 import com.example.craig.finalyearproject.model.PlaceInformation;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
-
-import static java.security.AccessController.getContext;
 
 /**
  * Created by craig on 29/03/2018.
@@ -31,32 +33,37 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     private final static String BASE_URL = "https://maps.googleapis.com/maps/api/place/photo?photoreference=";
     private static String PHOTO_REF = "&maxheight=200&maxwidth=200&key=AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
     private ArrayList list;
-
-    public RecyclerAdapter(ArrayList list, Context context, MapsActivity myMap) {
-        this.list = list;
-        this.context = context;
-        MyMap = myMap;
-    }
-
     private Context context;
     private MapsActivity MyMap;
     private PlaceInformation info;
+    private DatabaseReference ref;
+    private MyNotifiy myNotifiy;
+    static ArrayList<MyNotifiy> notifications;
 
+    public RecyclerAdapter(ArrayList list,Context context, MapsActivity myMap) {
+        this.list = list;
+        this.context = context;
+        MyMap = myMap;
+        notifications = new ArrayList<>();
+    }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.custom_row,parent,false);
+        ref = FirebaseDatabase.getInstance().getReference("Notifications");
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, final int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
+
         info = (PlaceInformation) list.get(position);
         String url = BASE_URL + info.getPhoto()+ PHOTO_REF;
         Picasso.with(context).load(url).into(holder.image);
         holder.placeInfo.append(""+info);
         Log.i("TAG",""+info);
+        info.setPosition(position);
         holder.mapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -78,10 +85,18 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
             }
         });
 
+        holder.mySwitch.setChecked(info.isChecked());
         holder.mySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.i("MYPOS", "POS" + position);
+                String username = MyMap.getUserName();
+                myNotifiy = new MyNotifiy();
+                //Log.i("MYPOS", "POS" + position);
+                info = (PlaceInformation) list.get(position);
+                myNotifiy.setSignUp(isChecked);
+                myNotifiy.setCompanyName(info.getCompanyName());
+                ref.child(username).child(info.getCompanyName()).setValue(myNotifiy);
+                Log.i("TESTING","" + ref.toString());
             }
         });
     }
@@ -97,6 +112,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         ImageView image;
         TextView placeInfo;
 
+
         public ViewHolder(View itemView) {
             super(itemView);
             image = (ImageView) itemView.findViewById(R.id.image);
@@ -105,5 +121,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
             msgButton = (ImageButton) itemView.findViewById(R.id.imageButton2);
             mySwitch = (Switch) itemView.findViewById(R.id.switch1);
         }
+
     }
 }
