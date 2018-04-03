@@ -111,10 +111,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseStorage firebaseStorage;
     private StorageReference storageReference, userRef;
     private ArrayList cordinList;
-    private ListView listView;
-    private MyCustomAdapter arrayAdapter;
     private double radius;
-    private Polyline line = null;
     private Toolbar toolbar;
     private FirebaseUser UserID;
     private String imageName = "";
@@ -324,6 +321,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         int id = item.getItemId();
         checkListSize();
         map.clear();
+        getCurrentLocation();
         if(id == R.id.action_fileUpload){
             startActivity(new Intent(this,UploadActivity.class));
             finish();
@@ -358,7 +356,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void getNotifications(){
-        notificationsRef.child(UserName).addListenerForSingleValueEvent(new ValueEventListener() {
+        notificationsRef.child(UserName).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot ds : dataSnapshot.getChildren()){

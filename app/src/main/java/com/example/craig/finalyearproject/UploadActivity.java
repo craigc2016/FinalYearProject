@@ -235,6 +235,9 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
             startActivity(new Intent(this,MapsActivity.class));
             finish();
         }
+        if(id == R.id.action_logout){
+            finish();
+        }
 
         return super.onOptionsItemSelected(item);
     }

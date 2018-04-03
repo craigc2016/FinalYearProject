@@ -16,11 +16,11 @@ import android.widget.Toast;
 
 import com.example.craig.finalyearproject.model.MyNotifiy;
 import com.example.craig.finalyearproject.model.PlaceInformation;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.onesignal.OneSignal;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -38,13 +38,18 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     private PlaceInformation info;
     private DatabaseReference ref;
     private MyNotifiy myNotifiy;
-    static ArrayList<MyNotifiy> notifications;
-
+    private static ArrayList<MyNotifiy> notifications;
+    private FirebaseUser UserID;
     public RecyclerAdapter(ArrayList list,Context context, MapsActivity myMap) {
         this.list = list;
         this.context = context;
         MyMap = myMap;
         notifications = new ArrayList<>();
+        UserID = FirebaseAuth.getInstance().getCurrentUser();
+        OneSignal.startInit(context)
+                .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
+                .unsubscribeWhenNotificationsAreDisabled(true)
+                .init();
     }
 
     @Override
@@ -57,13 +62,11 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-
         info = (PlaceInformation) list.get(position);
         String url = BASE_URL + info.getPhoto()+ PHOTO_REF;
         Picasso.with(context).load(url).into(holder.image);
         holder.placeInfo.append(""+info);
         Log.i("TAG",""+info);
-        info.setPosition(position);
         holder.mapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -74,6 +77,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         holder.msgButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                info = (PlaceInformation) list.get(position);
                 String username = MyMap.getUserName();
                 String companyName = info.getCompanyName();
                 Toast.makeText(context,"MESSAGING FEATURE",Toast.LENGTH_LONG).show();
@@ -81,6 +85,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtra("Username",username);
                 intent.putExtra("CompanyName",companyName);
+
                 context.startActivity(intent);
             }
         });
@@ -93,14 +98,26 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
                 myNotifiy = new MyNotifiy();
                 //Log.i("MYPOS", "POS" + position);
                 info = (PlaceInformation) list.get(position);
+                info.setChecked(isChecked);
                 myNotifiy.setSignUp(isChecked);
                 myNotifiy.setCompanyName(info.getCompanyName());
                 ref.child(username).child(info.getCompanyName()).setValue(myNotifiy);
                 Log.i("TESTING","" + ref.toString());
+                if(isChecked){
+                    setUpOneSignal();
+                }else {
+                    OneSignal.deleteTag(info.getCompanyName());
+                    Log.i("ONESIGNAL","REACHED");
+                }
+
             }
         });
     }
 
+    private void setUpOneSignal(){
+        OneSignal.sendTag(info.getCompanyName(),"1");
+        //OneSignal.setEmail(UserID.getEmail().toLowerCase());
+    }
     @Override
     public int getItemCount() {
         return list.size();
