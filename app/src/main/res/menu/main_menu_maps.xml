@@ -14,11 +14,6 @@
         android:orderInCategory="101"
         app:showAsAction="always"/>
 
-    <item android:id="@+id/action_getCurrentPosition"
-        android:title="@string/action_getCurrentPosition"
-        android:icon="@drawable/location"
-        android:orderInCategory="101"
-        app:showAsAction="always"/>
     <item android:id="@+id/action_address"
         android:title="@string/action_address"
         android:orderInCategory="101"

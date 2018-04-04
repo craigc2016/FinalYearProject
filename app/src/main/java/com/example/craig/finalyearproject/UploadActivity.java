@@ -1,26 +1,20 @@
 package com.example.craig.finalyearproject;
 
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.craig.finalyearproject.model.AddressDialog;
-import com.example.craig.finalyearproject.model.ImageDialog;
-import com.example.craig.finalyearproject.model.User;
 import com.example.craig.finalyearproject.model.UsernameInfo;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -30,14 +24,11 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
-
-import java.util.ArrayList;
 
 public class UploadActivity extends AppCompatActivity implements View.OnClickListener{
     private Button chooseImg, uploadImg;
@@ -75,7 +66,7 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         chooseImg = (Button)findViewById(R.id.chooseImg);
         uploadImg = (Button)findViewById(R.id.uploadImg);
         imgView = (ImageView)findViewById(R.id.imgView);
-
+        imgView.setImageResource(R.drawable.placeholder);
         //checkImage();
         setUpUserName();
         setImageForToolBar();
@@ -110,12 +101,16 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         });
     }
     public void setImageForToolBar(){
-        userRef.child("profile").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+        userRef.child("placeholder").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
                 try{
                     url = uri.toString();
-                    Picasso.with(UploadActivity.this).load(url).resize(100, 100).centerCrop().into(logo);
+                    Picasso.with(UploadActivity.this)
+                            .load(url)
+                            .resize(100,100)
+                            .centerCrop()
+                            .into(logo);
                 }catch (Exception e){
                     Toast.makeText(getApplication(),"Error while connecting to url" + url,Toast.LENGTH_LONG).show();
                     return;
@@ -160,17 +155,11 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
      */
     public void UploadImage(){
         if(filePath != null){
-            name = "profile";
+            name = "placeholder";
             progressDialog.show();
             userRef = storageReference.child(UserID.getUid());
             imageRef = userRef.child(name);
             UploadTask uploadTask = imageRef.putFile(filePath);
-
-            /*
-            DatabaseReference newRef = ref.child("User").child(UserID.getUid()).push();
-            User user = new User(UserID.getUid(),getUserName,name);
-            newRef.setValue(user);
-            */
 
             uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override

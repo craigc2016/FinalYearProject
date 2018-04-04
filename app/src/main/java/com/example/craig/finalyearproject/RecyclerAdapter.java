@@ -59,7 +59,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        info = (PlaceInformation) list.get(position);
+        info = (PlaceInformation) list.get(holder.getAdapterPosition());
         Log.i("TESTING",""+info);
         String url = BASE_URL + info.getPhoto()+ PHOTO_REF;
         Picasso.with(context).load(url).into(holder.image);
@@ -75,7 +75,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         holder.msgButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                info = (PlaceInformation) list.get(position);
+                info = (PlaceInformation) list.get(holder.getAdapterPosition());
                 String username = MyMap.getUserName();
                 String companyName = info.getCompanyName();
                 Toast.makeText(context,"MESSAGING FEATURE",Toast.LENGTH_LONG).show();
@@ -97,8 +97,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
                     setUpOneSignal();
                 }else {
                     OneSignal.deleteTag(info.getCompanyName());
-                    ref.child(username).child(info.getCompanyName()).setValue(checked);
-                    Log.i("ONESIGNAL","REACHED");
                 }
 
             }

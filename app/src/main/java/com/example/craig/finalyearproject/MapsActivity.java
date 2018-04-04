@@ -179,7 +179,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void setImageForToolBar() {
-        userRef.child("profile").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+        userRef.child("placeholder").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
                 try {
@@ -312,10 +312,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             finish();
         }
 
-        if(id == R.id.action_getCurrentPosition){
-            getCurrentLocation();
-            moveMap();
-        }
         if (id == R.id.action_address) {
             openDialog();
 
@@ -346,7 +342,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 for (DataSnapshot ds : dataSnapshot.getChildren()){
                     MyNotifiy myNotifiy = ds.getValue(MyNotifiy.class);
                     notifications.add(myNotifiy);
-                    //Log.i("REACHED","HELLO" + notifications);
+                    Log.i("REACHED","HELLO" + notifications);
                 }
             }
 
@@ -358,12 +354,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void setUpFireBase(){
+        getNotifications();
         refGeo = firebaseDatabase.getReference("GeoLocations");
         GeoFire geoFire = new GeoFire(refGeo);
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(lat,lon),radius);
         //arrayAdapter = new MyCustomAdapter(getBaseContext(),android.R.layout.simple_list_item_1,cordinList,MapsActivity.this);
         //listView.setAdapter(arrayAdapter);
         adapter = new RecyclerAdapter(cordinList,this,MapsActivity.this);
+        recyclerView.setAdapter(adapter);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
@@ -386,7 +384,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onGeoQueryReady() {
-                getNotifications();
                 for(int i=0;i<myLocations.size();i++){
                     MyGeoLocation geoLocation = myLocations.get(i);
                     String url = BASE_URL + "placeid=" + geoLocation.getKey()+ "&key=" + API_KEY;
@@ -394,7 +391,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     cordinList.add(info);
                     adapter.notifyDataSetChanged();
                 }
-                Log.i("MYLIST","" +cordinList);
             }
 
             @Override
@@ -402,7 +398,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //Toast.makeText(getBaseContext(),"ERROR" + error,Toast.LENGTH_LONG).show();
             }
         });
-        recyclerView.setAdapter(adapter);
     }
 
     private void openDialog(){
@@ -460,7 +455,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void getPlaceOnMap(int position){
         map.clear();
-        getCurrentLocation();
+        //getCurrentLocation();
         PlaceInformation placeInformation = (PlaceInformation) cordinList.get(position);
         double mylat = placeInformation.getLat();
         double mylon = placeInformation.getLon();
@@ -494,7 +489,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         PlaceInformation place = new PlaceInformation();
         try{
             placeDetails = new PlacesInfo().execute(URL).get();
-            Log.i("JSONOBJ",placeDetails);
             JSONObject jsonObjRoot = new JSONObject(placeDetails);
 
             JSONObject jsonObjRes = jsonObjRoot.getJSONObject("result");
@@ -545,6 +539,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 myNotifiy = notifications.get(i);
                 if(place.getCompanyName().equals(myNotifiy.getCompanyName())){
                     place.setChecked(myNotifiy.isSignUp());
+                    Log.i("MYNOTIFY","" +myNotifiy.isSignUp());
                 }
             }
         }catch (Exception e){
@@ -579,7 +574,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-
     private class PlacesInfo extends AsyncTask<String,Integer,String> {
         private ProgressDialog mProgressDialog;
         //private AsyncResult listener;
@@ -600,7 +594,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             mProgressDialog.setMax(100);
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             // Show progress dialog
-            //mProgressDialog.show();
+            mProgressDialog.show();
         }
 
         @Override
@@ -624,7 +618,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     data = inputStreamReader.read();
                     total += data;
                     //Log.i("PUB","" + total);
-                    //publishProgress((int)(total * 100 / contentLength));
+                    publishProgress((int)(total * 100 / contentLength));
                 }
                 inputStream.close();
                 inputStreamReader.close();
@@ -646,7 +640,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         protected void onPostExecute(String result){
             super.onPostExecute(result);
             //listener.getResult(result);
-            //mProgressDialog.dismiss();
+            mProgressDialog.dismiss();
         }
 
     }//end inner class

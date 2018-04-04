@@ -140,7 +140,7 @@ public class MessageActivity extends AppCompatActivity {
     */
 
     public void setImageForToolBar() {
-        userRef.child("profile").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+        userRef.child("placeholder").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
                 try {
