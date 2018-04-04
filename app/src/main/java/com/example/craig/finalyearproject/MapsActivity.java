@@ -1,23 +1,12 @@
 package com.example.craig.finalyearproject;
-
 import android.Manifest;
-import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.SystemClock;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -52,15 +41,8 @@ import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -68,11 +50,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -82,7 +60,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.squareup.picasso.Downloader;
+import com.onesignal.OneSignal;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -136,6 +114,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayList<MyNotifiy> notifications;
     private DatabaseReference notificationsRef;
     private MyNotifiy myNotifiy;
+    PlaceInformation place;
+    private ArrayList<MyGeoLocation>myLocations;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -160,9 +140,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         userRef = storageReference.child(UserID.getUid());
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         notifications = new ArrayList<>();
+        myLocations = new ArrayList<>();
         setUpUserName();
         setImageForToolBar();
         initToolBar();
+        OneSignal.startInit(this)
+                .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
+                .unsubscribeWhenNotificationsAreDisabled(true)
+                .init();
 
     }
 
@@ -329,7 +314,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if(id == R.id.action_getCurrentPosition){
             getCurrentLocation();
-            Log.i("MYLOC","" + lat + lon);
             moveMap();
         }
         if (id == R.id.action_address) {
@@ -374,33 +358,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void setUpFireBase(){
-        getNotifications();
         refGeo = firebaseDatabase.getReference("GeoLocations");
         GeoFire geoFire = new GeoFire(refGeo);
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(lat,lon),radius);
         //arrayAdapter = new MyCustomAdapter(getBaseContext(),android.R.layout.simple_list_item_1,cordinList,MapsActivity.this);
         //listView.setAdapter(arrayAdapter);
         adapter = new RecyclerAdapter(cordinList,this,MapsActivity.this);
-        recyclerView.setAdapter(adapter);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-
-                String url = BASE_URL + "placeid=" + key + "&key=" + API_KEY;
-                info = getPlaceInfo(url);
-                Log.i("CORDIN","" + info);
-                for (int i = 0;i<notifications.size();i++){
-                    myNotifiy = notifications.get(i);
-                    if(info.getCompanyName().equals(myNotifiy.getCompanyName())){
-                        //place.setChecked(myNotifiy.isSignUp());
-                        info.setChecked(myNotifiy.isSignUp());
-                        //Log.i("MYNOT","" +info.getCompanyName() + info.isChecked());
-                    }
-                }
-                cordinList.add(info);
-                num = cordinList.size();
-                adapter.notifyDataSetChanged();
-
+                MyGeoLocation geoLocation = new MyGeoLocation();
+                geoLocation.setKey(key);
+                geoLocation.setLat(location.latitude);
+                geoLocation.setLon(location.longitude);
+                myLocations.add(geoLocation);
             }
 
             @Override
@@ -415,15 +386,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onGeoQueryReady() {
+                getNotifications();
+                for(int i=0;i<myLocations.size();i++){
+                    MyGeoLocation geoLocation = myLocations.get(i);
+                    String url = BASE_URL + "placeid=" + geoLocation.getKey()+ "&key=" + API_KEY;
+                    info = getPlaceInfo(url);
+                    cordinList.add(info);
+                    adapter.notifyDataSetChanged();
+                }
+                Log.i("MYLIST","" +cordinList);
             }
 
             @Override
             public void onGeoQueryError(DatabaseError error) {
                 //Toast.makeText(getBaseContext(),"ERROR" + error,Toast.LENGTH_LONG).show();
             }
-
         });
-
+        recyclerView.setAdapter(adapter);
     }
 
     private void openDialog(){
@@ -476,6 +455,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         String newItem[];
         newItem = item.split("K",2);
         radius = Double.parseDouble(newItem[0].toString());
+        Log.i("RADIUS",""+radius);
     }
 
     public void getPlaceOnMap(int position){
@@ -503,17 +483,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void checkListSize(){
-        if(cordinList.size() > 0){
+        if(cordinList.size()> 0 && myLocations.size() > 0){
             cordinList.clear();
+            myLocations.clear();
             adapter.notifyDataSetChanged();
         }
     }
 
     public PlaceInformation getPlaceInfo(String URL){
         PlaceInformation place = new PlaceInformation();
-
         try{
             placeDetails = new PlacesInfo().execute(URL).get();
+            Log.i("JSONOBJ",placeDetails);
             JSONObject jsonObjRoot = new JSONObject(placeDetails);
 
             JSONObject jsonObjRes = jsonObjRoot.getJSONObject("result");
@@ -560,6 +541,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             place.setOpeningHours(openHours);
             place.setPhoto(photo);
             place.setOpenNow(openNowStr);
+            for (int i = 0;i<notifications.size();i++){
+                myNotifiy = notifications.get(i);
+                if(place.getCompanyName().equals(myNotifiy.getCompanyName())){
+                    place.setChecked(myNotifiy.isSignUp());
+                }
+            }
         }catch (Exception e){
             e.printStackTrace();
         }

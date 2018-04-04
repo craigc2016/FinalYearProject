@@ -83,8 +83,7 @@ public class MessageActivity extends AppCompatActivity {
                         .setValue(new ChatMessage(text.getText().toString(), username));
                 String msg = text.getText().toString();
                 text.setText(" ");
-                //sendNotification(text.getText().toString(),CompanyName);
-                new NotificationAsync(msg,CompanyName).execute();
+                new NotificationAsync(msg,CompanyName,username).execute();
             }
         });
     }
@@ -194,11 +193,12 @@ public class MessageActivity extends AppCompatActivity {
 }
 
 class NotificationAsync extends AsyncTask<Object, Object, String> {
-    String msg,segCompany;
+    String msg,segCompany,username;
 
-    public NotificationAsync(String msg,String segCompany){
+    public NotificationAsync(String msg,String segCompany,String username){
         this.msg = msg;
         this.segCompany = segCompany;
+        this.username = username;
     }
 
     @Override
@@ -213,12 +213,12 @@ class NotificationAsync extends AsyncTask<Object, Object, String> {
             con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             con.setRequestProperty("Authorization", "Basic OTg5YzczODktMWM2Ny00ODkxLTk1ZDUtZmM3YTRkYzcwNzll");
             con.setRequestMethod("POST");
-            //Log.i("VARIABLES",msg + segCompany);
+            Log.i("VARIABLES",msg + segCompany);
             String strJsonBody = "{"
                     +   "\"app_id\": \"2b2f27d6-facb-4c36-b5d9-d12e33244e02\","
                     +   "\"included_segments\": [\""+segCompany+"\"],"
                     +   "\"data\": {\"foo\": \"bar\"},"
-                    +   "\"contents\": {\"en\": \""+msg+"\"}"
+                    +   "\"contents\": {\"en\": \""+msg+ "from "+username+"\"}"
                     + "}";
 
             Log.i("ONESIGNALMESSAGE",strJsonBody);
