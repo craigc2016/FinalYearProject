@@ -32,6 +32,11 @@ import com.akexorcist.googledirection.constant.TransportMode;
 import com.akexorcist.googledirection.model.Direction;
 import com.akexorcist.googledirection.model.Route;
 import com.akexorcist.googledirection.util.DirectionConverter;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.craig.finalyearproject.model.AddressDialog;
 import com.example.craig.finalyearproject.model.MyGeoLocation;
 import com.example.craig.finalyearproject.model.MyNotifiy;
@@ -64,6 +69,7 @@ import com.onesignal.OneSignal;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 
@@ -114,8 +120,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayList<MyNotifiy> notifications;
     private DatabaseReference notificationsRef;
     private MyNotifiy myNotifiy;
-    PlaceInformation place;
-    private ArrayList<MyGeoLocation>myLocations;
+    //PlaceInformation place;
+    //private ArrayList<MyGeoLocation>myLocations;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -140,7 +146,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         userRef = storageReference.child(UserID.getUid());
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         notifications = new ArrayList<>();
-        myLocations = new ArrayList<>();
+        //myLocations = new ArrayList<>();
         setUpUserName();
         setImageForToolBar();
         initToolBar();
@@ -362,14 +368,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //listView.setAdapter(arrayAdapter);
         adapter = new RecyclerAdapter(cordinList,this,MapsActivity.this);
         recyclerView.setAdapter(adapter);
+        //String url = BASE_URL + "placeid=" + "ChIJN1t_tDeuEmsRUsoyG83frY4" + "&key=" + API_KEY;
+
+
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-                MyGeoLocation geoLocation = new MyGeoLocation();
-                geoLocation.setKey(key);
-                geoLocation.setLat(location.latitude);
-                geoLocation.setLon(location.longitude);
-                myLocations.add(geoLocation);
+
+                String url = BASE_URL + "placeid=" + key + "&key=" + API_KEY;
+                getPlaceInfo(url);
+
             }
 
             @Override
@@ -384,13 +392,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onGeoQueryReady() {
-                for(int i=0;i<myLocations.size();i++){
-                    MyGeoLocation geoLocation = myLocations.get(i);
-                    String url = BASE_URL + "placeid=" + geoLocation.getKey()+ "&key=" + API_KEY;
-                    info = getPlaceInfo(url);
-                    cordinList.add(info);
-                    adapter.notifyDataSetChanged();
-                }
             }
 
             @Override
@@ -478,76 +479,92 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void checkListSize(){
-        if(cordinList.size()> 0 && myLocations.size() > 0){
+        if(cordinList.size()> 0){
             cordinList.clear();
-            myLocations.clear();
             adapter.notifyDataSetChanged();
         }
     }
 
-    public PlaceInformation getPlaceInfo(String URL){
-        PlaceInformation place = new PlaceInformation();
-        try{
-            placeDetails = new PlacesInfo().execute(URL).get();
-            JSONObject jsonObjRoot = new JSONObject(placeDetails);
 
-            JSONObject jsonObjRes = jsonObjRoot.getJSONObject("result");
-            JSONObject geometry = jsonObjRes.getJSONObject("geometry");
-            JSONObject loc = geometry.getJSONObject("location");
-            JSONObject jsonOpenHours = jsonObjRes.optJSONObject("opening_hours");
-            JSONArray openingArray = jsonOpenHours.getJSONArray("weekday_text");
-            JSONArray photoArray;
-            JSONObject photoObj = null;
-            String photo;
-            try{
-                photoArray = jsonObjRes.getJSONArray("photos");
-                photoObj = photoArray.getJSONObject(0);
-            }catch (Exception e){
-                photo = IMAGE_NOT_FOUND;
-                Log.i("ERRORI",photo);
-                e.printStackTrace();
-            }
+    public void getPlaceInfo(String URL){
 
-            photo = photoObj.getString("photo_reference");
-            boolean openNow = jsonOpenHours.getBoolean("open_now");
-            String openNowStr = "";
-            if (openNow == true){
-                openNowStr = "YES";
-            }else {
-                openNowStr = "NO";
-            }
-            //Place Details
-            double lat = loc.getDouble("lat"),lon = loc.getDouble("lng");
-            String phoneNum = jsonObjRes.getString("formatted_phone_number");
-            String address = jsonObjRes.getString("formatted_address");
-            String name = jsonObjRes.getString("name");
-            String website = jsonObjRes.getString("website");
-            String openHours="";
-            for(int i =0;i<openingArray.length();i++){
-                openHours += "\n" + openingArray.getString(i);
-            }
-            place.setLat(lat);
-            place.setLon(lon);
-            place.setCompanyName(name);
-            place.setAddress(address);
-            place.setPhoneNum(phoneNum);
-            place.setWebsite(website);
-            place.setOpeningHours(openHours);
-            place.setPhoto(photo);
-            place.setOpenNow(openNowStr);
-            for (int i = 0;i<notifications.size();i++){
-                myNotifiy = notifications.get(i);
-                if(place.getCompanyName().equals(myNotifiy.getCompanyName())){
-                    place.setChecked(myNotifiy.isSignUp());
-                    Log.i("MYNOTIFY","" +myNotifiy.isSignUp());
-                }
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        Log.i("PLACE",""+ place);
-        return place;
+       JsonObjectRequest jsonRequest = new JsonObjectRequest
+                (Request.Method.GET, URL, null, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.i("MYJSONOBJ","" + response);
+
+                        PlaceInformation place = new PlaceInformation();
+                        try{
+
+                            JSONObject jsonObjRes = response.getJSONObject("result");
+                            JSONObject geometry = jsonObjRes.getJSONObject("geometry");
+                            JSONObject loc = geometry.getJSONObject("location");
+                            JSONObject jsonOpenHours = jsonObjRes.optJSONObject("opening_hours");
+                            JSONArray openingArray = jsonOpenHours.getJSONArray("weekday_text");
+                            JSONArray photoArray;
+                            JSONObject photoObj = null;
+                            String photo;
+                            try{
+                                photoArray = jsonObjRes.getJSONArray("photos");
+                                photoObj = photoArray.getJSONObject(0);
+                            }catch (Exception e){
+                                photo = IMAGE_NOT_FOUND;
+                                Log.i("ERRORI",photo);
+                                e.printStackTrace();
+                            }
+
+                            photo = photoObj.getString("photo_reference");
+                            boolean openNow = jsonOpenHours.getBoolean("open_now");
+                            String openNowStr = "";
+                            if (openNow == true){
+                                openNowStr = "YES";
+                            }else {
+                                openNowStr = "NO";
+                            }
+                            //Place Details
+                            double lat = loc.getDouble("lat"),lon = loc.getDouble("lng");
+                            String phoneNum = jsonObjRes.getString("formatted_phone_number");
+                            String address = jsonObjRes.getString("formatted_address");
+                            String name = jsonObjRes.getString("name");
+                            String website = jsonObjRes.getString("website");
+                            String openHours="";
+                            for(int i =0;i<openingArray.length();i++){
+                                openHours += "\n" + openingArray.getString(i);
+                            }
+                            place.setLat(lat);
+                            place.setLon(lon);
+                            place.setCompanyName(name);
+                            place.setAddress(address);
+                            place.setPhoneNum(phoneNum);
+                            place.setWebsite(website);
+                            place.setOpeningHours(openHours);
+                            place.setPhoto(photo);
+                            place.setOpenNow(openNowStr);
+                            for (int i = 0;i<notifications.size();i++){
+                                myNotifiy = notifications.get(i);
+                                if(place.getCompanyName().equals(myNotifiy.getCompanyName())){
+                                    place.setChecked(myNotifiy.isSignUp());
+                                    Log.i("MYNOTIFY","" +myNotifiy.isSignUp());
+                                }
+                            }
+                            cordinList.add(place);
+                            adapter.notifyDataSetChanged();
+                            Log.i("MYCORDIN",""+ place);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                    }
+                });
+        Volley.newRequestQueue(this).add(jsonRequest);
     }
+
 
     @Override
     public void onDirectionSuccess(Direction direction, String rawBody) {
@@ -572,77 +589,5 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLngBounds bounds = new LatLngBounds(southwest, northeast);
         map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
     }
-
-
-    private class PlacesInfo extends AsyncTask<String,Integer,String> {
-        private ProgressDialog mProgressDialog;
-        //private AsyncResult listener;
-        public PlacesInfo() {
-            //this.listener = listener;
-        }
-
-        @Override
-        protected void onPreExecute(){
-            super.onPreExecute();
-            // Create progress dialog
-            mProgressDialog = new ProgressDialog(MapsActivity.this);
-            // Set your progress dialog Title
-            mProgressDialog.setTitle("Download Screen");
-            // Set your progress dialog Message
-            mProgressDialog.setMessage("Downloading, Please Wait!");
-            mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setMax(100);
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            // Show progress dialog
-            mProgressDialog.show();
-        }
-
-        @Override
-        protected String doInBackground(String... prams) {
-            try{
-                URL url = new URL(prams[0]);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.connect();
-                int contentLength = connection.getContentLength();
-
-                InputStream inputStream = connection.getInputStream();
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                int data = inputStreamReader.read();
-                String apiDetails = "";
-                char current;
-                long total =0;
-
-                while(data != -1){
-                    current = (char)data;
-                    apiDetails += current;
-                    data = inputStreamReader.read();
-                    total += data;
-                    //Log.i("PUB","" + total);
-                    publishProgress((int)(total * 100 / contentLength));
-                }
-                inputStream.close();
-                inputStreamReader.close();
-                //Toast.makeText(getBaseContext(),"DOWNLOADING INFORMATION",Toast.LENGTH_LONG).show();
-                return apiDetails;
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... progress) {
-            super.onProgressUpdate(progress);
-            // Update the progress dialog
-            mProgressDialog.setProgress(progress[0]);
-        }
-
-        protected void onPostExecute(String result){
-            super.onPostExecute(result);
-            //listener.getResult(result);
-            mProgressDialog.dismiss();
-        }
-
-    }//end inner class
 
 }//end outer class

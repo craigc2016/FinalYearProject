@@ -58,17 +58,19 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(final ViewHolder holder, final int position) {
-        info = (PlaceInformation) list.get(holder.getAdapterPosition());
+    public void onBindViewHolder(final ViewHolder holder, int position) {
+        info = (PlaceInformation) list.get(position);
+        Log.i("NUMS","position : " + position + " " + "adapter : " + holder.getAdapterPosition() + "HOLDER : " + holder.getLayoutPosition());
         Log.i("TESTING",""+info);
         String url = BASE_URL + info.getPhoto()+ PHOTO_REF;
         Picasso.with(context).load(url).into(holder.image);
-        holder.placeInfo.append(""+info);
-        Log.i("TAG",""+info);
+        holder.placeInfo.setText(""+info);
+        Log.i("TAG",""+position);
+
         holder.mapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MyMap.getPlaceOnMap(position);
+                MyMap.getPlaceOnMap(holder.getAdapterPosition());
             }
         });
 
@@ -92,32 +94,25 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         holder.mySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                boolean checked = checkingNotifications(isChecked,position);
-                if(checked){
-                    setUpOneSignal();
+                username = MyMap.getUserName();
+                myNotifiy = new MyNotifiy();
+                //Log.i("MYPOS", "POS" + position);
+                info = (PlaceInformation) list.get(holder.getAdapterPosition());
+                info.setChecked(isChecked);
+                myNotifiy.setSignUp(isChecked);
+                myNotifiy.setCompanyName(info.getCompanyName());
+                myNotifiy.isSignUp();
+                ref.child(username).child(info.getCompanyName()).setValue(myNotifiy);
+                if(isChecked){
+                    OneSignal.sendTag(info.getCompanyName(),"1");
                 }else {
                     OneSignal.deleteTag(info.getCompanyName());
                 }
-
             }
         });
     }
 
-    private boolean checkingNotifications(boolean isChecked, int position){
-        username = MyMap.getUserName();
-        myNotifiy = new MyNotifiy();
-        //Log.i("MYPOS", "POS" + position);
-        info = (PlaceInformation) list.get(position);
-        info.setChecked(isChecked);
-        myNotifiy.setSignUp(isChecked);
-        myNotifiy.setCompanyName(info.getCompanyName());
-        ref.child(username).child(info.getCompanyName()).setValue(myNotifiy);
-        return myNotifiy.isSignUp();
-    }
-    private void setUpOneSignal(){
-        OneSignal.sendTag(info.getCompanyName(),"1");
-        //OneSignal.setEmail(UserID.getEmail().toLowerCase());
-    }
+
     @Override
     public int getItemCount() {
         return list.size();

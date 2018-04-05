@@ -45,6 +45,7 @@ dependencies {
     compile 'com.android.support:design:24.2.0'
     compile 'com.firebaseui:firebase-ui:0.6.0'
     compile 'com.onesignal:OneSignal:3.8.3@aar'
+    compile 'com.android.volley:volley:1.0.0'
     testCompile 'junit:junit:4.12'
 }
 apply plugin: 'com.google.gms.google-services'
