@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -146,15 +147,14 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             //stopping the function execution further
             return;
         }
-
-        for (UsernameInfo item : list){
-            if(item.getUsername().equals(usernameText) ){
+        UsernameInfo info;
+        for (int i =0;i<list.size();i++){
+            info = list.get(i);
+            if(info.getUsername().equals(usernameText) ){
                 Toast.makeText(this,"Error username in use",Toast.LENGTH_SHORT).show();
                 username.setText("");
                 username.setFocusable(true);
                 return;
-            }else{
-                break;
             }
         }
 
@@ -172,7 +172,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                         if (task.isSuccessful()){
                             //User is successfully registered and logged in
                             DatabaseReference newRef = userNameRef.push();
-                            UsernameInfo usernameInfo = new UsernameInfo(usernameText,emailText);
+                            UsernameInfo usernameInfo = new UsernameInfo(usernameText,emailText,newRef.getKey());
                             newRef.setValue(usernameInfo);
                             Toast.makeText(RegisterActivity.this, usernameText , Toast.LENGTH_SHORT).show();
                             LoginScreen();

@@ -190,7 +190,12 @@ public class MessageActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-}
+    protected void onPause(){
+        super.onPause();
+        finish();
+    }
+
+}//end class
 
 class NotificationAsync extends AsyncTask<Object, Object, String> {
     String msg,segCompany,username;
@@ -217,7 +222,7 @@ class NotificationAsync extends AsyncTask<Object, Object, String> {
             String strJsonBody = "{"
                     +   "\"app_id\": \"2b2f27d6-facb-4c36-b5d9-d12e33244e02\","
                     +   "\"included_segments\": [\""+segCompany+"\"],"
-                    +   "\"data\": {\"foo\": \"bar\"},"
+                    +   "\"data\": {\"tag\": \""+segCompany+"\"},"
                     +   "\"contents\": {\"en\": \""+msg+ "from "+username+"\"}"
                     + "}";
 

@@ -7,10 +7,12 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,8 +32,11 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
+
 public class UploadActivity extends AppCompatActivity implements View.OnClickListener{
-    private Button chooseImg, uploadImg;
+    private Button chooseImg, uploadImg,btnUser;
+    private EditText editUser;
     private ImageView imgView;
     private int PICK_IMAGE_REQUEST = 111;
     private Uri filePath;
@@ -49,7 +54,9 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     private String url;
     private TextView title;
     private String email;
-
+    private ArrayList<UsernameInfo> t;
+    private boolean flag;
+    UsernameInfo usernameInfo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,19 +72,22 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         //Toast.makeText(this,"" + ref.child("User").child(UserID.getUid()),Toast.LENGTH_LONG).show();
         chooseImg = (Button)findViewById(R.id.chooseImg);
         uploadImg = (Button)findViewById(R.id.uploadImg);
+        btnUser = (Button)findViewById(R.id.btnUsername);
+        editUser = (EditText) findViewById(R.id.editUsername);
+        editUser.setEnabled(false);
         imgView = (ImageView)findViewById(R.id.imgView);
         imgView.setImageResource(R.drawable.placeholder);
+        t = new ArrayList<>();
         //checkImage();
         setUpUserName();
         setImageForToolBar();
         initToolBar();
-
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Uploading....");
 
         chooseImg.setOnClickListener(this);
         uploadImg.setOnClickListener(this);
-
+        btnUser.setOnClickListener(this);
     }
     public void setUpUserName(){
         email = UserID.getEmail().toLowerCase();
@@ -86,9 +96,12 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot ds : dataSnapshot.getChildren()){
                     UsernameInfo usernameInfo = ds.getValue(UsernameInfo.class);
+                    t.add(usernameInfo);
+                    //Log.i("TESTNAME",""+t);
                     if(email.equals(usernameInfo.getEmail().toLowerCase())){
                         getUserName = usernameInfo.getUsername();
                         title.setText(getUserName);
+                        editUser.setText(getUserName);
                         break;
                     }
                 }
@@ -139,6 +152,22 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         if(v == uploadImg){
             UploadImage();
         }
+        if(v == btnUser){
+            Log.i("TESTNAME",""+t);
+            checkUsername();
+        }
+    }
+
+    private void checkUsername(){
+        editUser.setEnabled(true);
+        UsernameInfo info;
+        for(int i=0;i<t.size();i++){
+            info = t.get(i);
+            if(info.getEmail().equals(email)){
+                ref.child("UserName").child(info.getKey()).setValue(info);
+            }
+        }
+
     }
 
     public void ChooseImage(){
@@ -195,7 +224,10 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
             filePath = data.getData();
             try {
                 //Used to load the image using the picasso library
-                Picasso.with(this).load(filePath).into(imgView);
+                Picasso.with(this).load(filePath)
+                        .resize(150,150)
+                        .centerCrop()
+                        .into(imgView);
                 //Toast.makeText(this,"" + filePath,Toast.LENGTH_LONG).show();
             } catch (Exception e) {
                 e.printStackTrace();

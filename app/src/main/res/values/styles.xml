@@ -4,7 +4,7 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:statusBarColor">@color/tangerine</item>
-        <item name="colorPrimary">@color/peargreen</item>
+        <item name="colorPrimary">@color/tangerine</item>
         <item name="android:colorBackground">@color/offwhite</item>
         <item name="colorAccent">@color/tangerine</item>
     </style>

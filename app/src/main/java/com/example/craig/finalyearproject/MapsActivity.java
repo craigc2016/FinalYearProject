@@ -65,6 +65,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.onesignal.OSNotificationAction;
+import com.onesignal.OSNotificationOpenResult;
 import com.onesignal.OneSignal;
 import com.squareup.picasso.Picasso;
 
@@ -146,16 +148,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         userRef = storageReference.child(UserID.getUid());
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         notifications = new ArrayList<>();
-        //myLocations = new ArrayList<>();
         setUpUserName();
         setImageForToolBar();
         initToolBar();
         OneSignal.startInit(this)
                 .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
+                .setNotificationOpenedHandler(new MyNotificationOpenedHandler(getApplication()))
                 .unsubscribeWhenNotificationsAreDisabled(true)
                 .init();
-
     }
+
 
     public void setUpUserName() {
         email = UserID.getEmail().toLowerCase();
@@ -588,6 +590,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng northeast = route.getBound().getNortheastCoordination().getCoordination();
         LatLngBounds bounds = new LatLngBounds(southwest, northeast);
         map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+    }
+
+    protected void onPause(){
+        super.onPause();
+        finish();
     }
 
 }//end outer class

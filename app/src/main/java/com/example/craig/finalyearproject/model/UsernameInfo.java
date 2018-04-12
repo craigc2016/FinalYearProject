@@ -7,12 +7,21 @@ package com.example.craig.finalyearproject.model;
 public class UsernameInfo {
     private String username;
     private String email;
-
+    private String key;
     public UsernameInfo(){}
 
-    public UsernameInfo(String username, String email){
+    public UsernameInfo(String username, String email,String key){
         this.username = username;
         this.email = email;
+        this.key = key;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public String getUsername() {
@@ -29,5 +38,13 @@ public class UsernameInfo {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    @Override
+    public String toString() {
+        return "UsernameInfo{" +
+                "username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                '}';
     }
 }

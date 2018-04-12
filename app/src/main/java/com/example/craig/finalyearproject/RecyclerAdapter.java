@@ -44,7 +44,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         this.list = list;
         this.context = context;
         MyMap = myMap;
-        notifications = new ArrayList<>();
+        this.notifications = new ArrayList<>();
         //OSPermissionSubscriptionState status = OneSignal.getPermissionSubscriptionState();
         //OneID = status.getSubscriptionStatus().getUserId();
     }

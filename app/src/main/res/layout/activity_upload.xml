@@ -32,11 +32,11 @@
 
     <ImageView
         android:id="@+id/imgView"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="73dp"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
         android:layout_below="@+id/toolbar"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="73dp" />
 
     <Button
         android:layout_width="match_parent"
@@ -53,6 +53,27 @@
         android:id="@+id/uploadImg"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true" />
+
+    <EditText
+        android:id="@+id/editUsername"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/imgView"
+        android:layout_alignStart="@+id/imgView"
+        android:layout_below="@+id/imgView"
+        android:layout_marginTop="21dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="Name" />
+
+    <Button
+        android:id="@+id/btnUsername"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/chooseImg"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
+        android:text="Choose Username" />
 
 </RelativeLayout>
 
