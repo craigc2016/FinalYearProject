@@ -57,6 +57,7 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     private ArrayList<UsernameInfo> t;
     private boolean flag;
     UsernameInfo usernameInfo;
+    private DatabaseReference user;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,7 +75,6 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         uploadImg = (Button)findViewById(R.id.uploadImg);
         btnUser = (Button)findViewById(R.id.btnUsername);
         editUser = (EditText) findViewById(R.id.editUsername);
-        editUser.setEnabled(false);
         imgView = (ImageView)findViewById(R.id.imgView);
         imgView.setImageResource(R.drawable.placeholder);
         t = new ArrayList<>();
@@ -84,7 +84,7 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         initToolBar();
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Uploading....");
-
+        user = ref.child("UserName");
         chooseImg.setOnClickListener(this);
         uploadImg.setOnClickListener(this);
         btnUser.setOnClickListener(this);
@@ -101,7 +101,6 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
                     if(email.equals(usernameInfo.getEmail().toLowerCase())){
                         getUserName = usernameInfo.getUsername();
                         title.setText(getUserName);
-                        editUser.setText(getUserName);
                         break;
                     }
                 }
@@ -159,15 +158,27 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     private void checkUsername(){
-        editUser.setEnabled(true);
-        UsernameInfo info;
+        UsernameInfo info = null;
+        String tempName = editUser.getText().toString();
+        Log.i("REF","" + user);
+        String tempEmail;
+        //Log.i("INFO","" + "  " + email);
         for(int i=0;i<t.size();i++){
             info = t.get(i);
-            if(info.getEmail().equals(email)){
-                ref.child("UserName").child(info.getKey()).setValue(info);
+            tempEmail = info.getEmail();
+            tempEmail.trim();
+            if (info.getUsername().equals(tempName) && !tempEmail.equals(email)){
+                Toast.makeText(this,"Error username in use",Toast.LENGTH_SHORT).show();
+                editUser.setText("");
+                editUser.setFocusable(true);
+                return;
             }
         }
 
+        info.setUsername(editUser.getText().toString());
+        user.child(info.getKey()).removeValue();
+        user.child(info.getKey()).setValue(info);
+        //t.clear();
     }
 
     public void ChooseImage(){
@@ -225,8 +236,6 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
             try {
                 //Used to load the image using the picasso library
                 Picasso.with(this).load(filePath)
-                        .resize(150,150)
-                        .centerCrop()
                         .into(imgView);
                 //Toast.makeText(this,"" + filePath,Toast.LENGTH_LONG).show();
             } catch (Exception e) {

@@ -15,6 +15,7 @@ import org.json.JSONObject;
 public class MyNotificationOpenedHandler implements OneSignal.NotificationOpenedHandler {
     private Application application;
     private String companyName;
+    private String username;
     public MyNotificationOpenedHandler(Application application) {
         this.application = application;
     }
@@ -24,7 +25,8 @@ public class MyNotificationOpenedHandler implements OneSignal.NotificationOpened
         // Get custom datas from notification
         JSONObject data = result.notification.payload.additionalData;
         companyName = data.optString("tag");
-
+        username = data.optString("tag1");
+        Log.i("USERNAME",username + companyName);
         if (data != null) {
             Log.i("DATA","" + data);
             startApp();
@@ -37,6 +39,7 @@ public class MyNotificationOpenedHandler implements OneSignal.NotificationOpened
                 .setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
         Log.i("TESTTAG",companyName);
         intent.putExtra("CompanyName",companyName);
+        intent.putExtra("UserName",username);
         application.startActivity(intent);
     }
 }
