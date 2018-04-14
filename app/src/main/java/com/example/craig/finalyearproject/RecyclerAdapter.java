@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.example.craig.finalyearproject.model.MyNotifiy;
 import com.example.craig.finalyearproject.model.PlaceInformation;
+import com.example.craig.finalyearproject.model.UsernameInfo;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -38,7 +39,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     private PlaceInformation info;
     private DatabaseReference ref;
     private MyNotifiy myNotifiy;
-    private static ArrayList<MyNotifiy> notifications;
+    private ArrayList<MyNotifiy> notifications;
     private String username="";
     public RecyclerAdapter(ArrayList list,Context context, MapsActivity myMap) {
         this.list = list;

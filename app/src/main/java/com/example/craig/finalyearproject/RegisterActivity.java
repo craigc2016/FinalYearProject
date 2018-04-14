@@ -123,9 +123,9 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     is entered it will register the account and bring the user to the login page.
      */
     private void userReg(){
-        final String emailText = email.getText().toString().trim();
+        final String emailText = email.getText().toString().trim().toLowerCase();
         String passwordText = password.getText().toString().trim();
-        final String usernameText = username.getText().toString().trim();
+        final String usernameText = username.getText().toString().trim().toLowerCase();
 
         if (TextUtils.isEmpty(usernameText)){
             //usernameInfo is empty

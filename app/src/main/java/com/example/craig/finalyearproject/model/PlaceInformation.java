@@ -15,9 +15,9 @@ public class PlaceInformation {
     private double lon;
     private String photo;
     private int position;
-
     private boolean isChecked;
     private String openNow;
+
     public String getOpenNow() {
         return openNow;
     }

@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.craig.finalyearproject.model.MyNotifiy;
 import com.example.craig.finalyearproject.model.UsernameInfo;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -54,10 +55,11 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     private String url;
     private TextView title;
     private String email;
-    private ArrayList<UsernameInfo> t;
+    private ArrayList<UsernameInfo> usernameInfos;
+    private ArrayList<MyNotifiy> notifiyList;
     private boolean flag;
     UsernameInfo usernameInfo;
-    private DatabaseReference user;
+    private DatabaseReference user,notifiy;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,7 +79,8 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         editUser = (EditText) findViewById(R.id.editUsername);
         imgView = (ImageView)findViewById(R.id.imgView);
         imgView.setImageResource(R.drawable.placeholder);
-        t = new ArrayList<>();
+        usernameInfos = new ArrayList<>();
+        notifiyList = new ArrayList<>();
         //checkImage();
         setUpUserName();
         setImageForToolBar();
@@ -85,9 +88,29 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Uploading....");
         user = ref.child("UserName");
+        notifiy = ref.child("Notifications");
+
         chooseImg.setOnClickListener(this);
         uploadImg.setOnClickListener(this);
         btnUser.setOnClickListener(this);
+    }
+
+    public void getNotifications(String username){
+        notifiy.child(username).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot ds : dataSnapshot.getChildren()){
+                    MyNotifiy n = ds.getValue(MyNotifiy.class);
+                    Log.i("CHECKER",""+n);
+                    notifiyList.add(n);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
     public void setUpUserName(){
         email = UserID.getEmail().toLowerCase();
@@ -96,11 +119,13 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot ds : dataSnapshot.getChildren()){
                     UsernameInfo usernameInfo = ds.getValue(UsernameInfo.class);
-                    t.add(usernameInfo);
+                    usernameInfos.add(usernameInfo);
                     //Log.i("TESTNAME",""+t);
                     if(email.equals(usernameInfo.getEmail().toLowerCase())){
                         getUserName = usernameInfo.getUsername();
                         title.setText(getUserName);
+                        editUser.setText(getUserName);
+                        getNotifications(getUserName);
                         break;
                     }
                 }
@@ -111,6 +136,7 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
 
             }
         });
+
     }
     public void setImageForToolBar(){
         userRef.child("placeholder").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
@@ -152,7 +178,6 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
             UploadImage();
         }
         if(v == btnUser){
-            Log.i("TESTNAME",""+t);
             checkUsername();
         }
     }
@@ -162,23 +187,47 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         String tempName = editUser.getText().toString();
         Log.i("REF","" + user);
         String tempEmail;
-        //Log.i("INFO","" + "  " + email);
-        for(int i=0;i<t.size();i++){
-            info = t.get(i);
+        String oldName = getUserName;
+        String checkName;
+        for(int i=0;i<usernameInfos.size();i++){
+            info = usernameInfos.get(i);
             tempEmail = info.getEmail();
-            tempEmail.trim();
-            if (info.getUsername().equals(tempName) && !tempEmail.equals(email)){
+            tempEmail = tempEmail.toLowerCase().trim();
+            tempName  = tempName.toLowerCase().trim();
+            checkName = info.getUsername();
+            checkName = checkName.toLowerCase().trim();
+            Log.i("CHECKNAME",checkName + "  " + tempName);
+            if (checkName.equals(tempName) && !tempEmail.equals(email)){
                 Toast.makeText(this,"Error username in use",Toast.LENGTH_SHORT).show();
                 editUser.setText("");
                 editUser.setFocusable(true);
                 return;
             }
         }
+        checkName = editUser.getText().toString().toLowerCase().trim();
+        if(checkName.equals("")){
+            Toast.makeText(this,"Error username must not be blank",Toast.LENGTH_SHORT).show();
+            return;
 
-        info.setUsername(editUser.getText().toString());
-        user.child(info.getKey()).removeValue();
-        user.child(info.getKey()).setValue(info);
-        //t.clear();
+        }
+        if(!checkName.equals("")){
+            info.setUsername(checkName);
+            user.child(info.getKey()).removeValue();
+            user.child(info.getKey()).setValue(info);
+            Toast.makeText(this,"Username updated",Toast.LENGTH_LONG).show();
+        }
+
+        MyNotifiy notifiyCheck;
+        for (int i=0;i<notifiyList.size();i++){
+            notifiyCheck = notifiyList.get(i);
+            MyNotifiy newNotify = new MyNotifiy();
+            newNotify.setCompanyName(notifiyCheck.getCompanyName());
+            newNotify.setSignUp(notifiyCheck.isSignUp());
+            notifiy.child(oldName).removeValue();
+            notifiy.child(info.getUsername()).child(notifiyCheck.getCompanyName()).setValue(newNotify);
+        }
+
+        usernameInfos.clear();
     }
 
     public void ChooseImage(){
