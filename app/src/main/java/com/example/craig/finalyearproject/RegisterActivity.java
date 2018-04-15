@@ -56,6 +56,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
 
         //Get references to the UI components
         username = (EditText) findViewById(R.id.editUserName);
+        username.setFocusable(true);
         email = (EditText) findViewById(R.id.editEmail);
         password = (EditText) findViewById(R.id.editPass);
         signIn = (Button) findViewById(R.id.btnSignIn);

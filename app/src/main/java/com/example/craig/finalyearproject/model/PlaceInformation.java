@@ -117,6 +117,6 @@ public class PlaceInformation {
 
 
     public String toString(){
-        return "CompanyName : " + companyName + "\nAddress : " + address + "\nPhoneNumber : " + phoneNum + "\nWebsite : " + website + "\nOpen : " + openNow + "\nOpeningHours " + openingHours;
+        return "CompanyName : " + companyName + "Address : " + address + "PhoneNumber : " + phoneNum + "Website : " + website + "\nOpen : " + openNow + " OpeningHours " + openingHours;
     }
 }

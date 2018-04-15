@@ -184,6 +184,10 @@ public class MessageActivity extends AppCompatActivity {
             startActivity(new Intent(this,MapsActivity.class));
             finish();
         }
+        if(id == R.id.action_fileUpload){
+            startActivity(new Intent(this,UploadActivity.class));
+            finish();
+        }
         if(id == R.id.action_logout){
             finish();
         }

@@ -9,6 +9,11 @@
     <color name="tangerine">#ff963f</color>
     <color name="peargreen">#39a400</color>
     <color name="grey">#d3d3d3</color>
+    <color name="black"> #000</color>
+
+
+
+
 
 
 </resources>

@@ -8,14 +8,20 @@
         app:showAsAction="always">
         <menu>
             <item android:id="@+id/action_maps"
-                android:icon="@drawable/directions"
+                android:icon="@drawable/google"
                 android:title="@string/title_activity_maps"
+                android:orderInCategory="101"
+                app:showAsAction="always"/>
+
+            <item android:id="@+id/action_fileUpload"
+                android:icon="@drawable/profilenew"
+                android:title="Profile"
                 android:orderInCategory="101"
                 app:showAsAction="always"/>
 
             <item android:id="@+id/action_logout"
                 android:title="@string/action_Logout"
-                android:icon="@drawable/logout"
+                android:icon="@drawable/logoutnew"
                 android:orderInCategory="101"
                 app:showAsAction="always" />
 

@@ -63,8 +63,7 @@
         android:layout_below="@+id/imgView"
         android:layout_marginTop="21dp"
         android:ems="10"
-        android:inputType="textPersonName"
-        android:text="Name" />
+        android:inputType="textPersonName" />
 
     <Button
         android:id="@+id/btnUsername"
@@ -74,6 +73,15 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentStart="true"
         android:text="Choose Username" />
+
+    <TextView
+        android:id="@+id/txtUserName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Username : "
+        android:layout_alignBaseline="@+id/editUsername"
+        android:layout_alignBottom="@+id/editUsername"
+        android:layout_toStartOf="@+id/editUsername" />
 
 </RelativeLayout>
 

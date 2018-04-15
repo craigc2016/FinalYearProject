@@ -5,66 +5,66 @@
     android:layout_height="match_parent">
 
 
-    <ImageView
-        android:id="@+id/image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:srcCompat="@drawable/common_full_open_on_phone" />
-
     <LinearLayout
+        android:id="@+id/linearLayoutText"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:id="@+id/linearLayoutText"
-        android:layout_toEndOf="@+id/image">
+        android:layout_toEndOf="@+id/linearLayout">
 
         <TextView
             android:id="@+id/placeInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true" />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/my_border" />
 
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:id="@+id/linearLayout"
-        android:layout_below="@+id/image"
-        android:layout_alignParentStart="true">
+        android:layout_alignParentStart="true"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/common_full_open_on_phone" />
 
         <ImageButton
             android:id="@+id/imageButton1"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginStart="5dp"
             android:layout_marginTop="5dp"
-            android:src="@drawable/mapicon"
+            android:src="@drawable/location"
             app:srcCompat="@drawable/common_full_open_on_phone" />
 
         <ImageButton
             android:id="@+id/imageButton2"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_alignTop="@+id/imageButton1"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginStart="5dp"
             android:layout_marginTop="5dp"
             android:layout_toEndOf="@+id/imageButton1"
-            android:src="@drawable/message"
+            android:src="@drawable/messagenew"
             app:srcCompat="@drawable/common_full_open_on_phone" />
+
+        <Switch
+            android:id="@+id/switch1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/linearLayout"
+            android:layout_toStartOf="@+id/linearLayoutText"
+            android:text="notify" />
 
     </LinearLayout>
 
-    <Switch
-        android:id="@+id/switch1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/linearLayout"
-        android:layout_marginTop="10dp"
-        android:text="notify"
-        android:layout_toStartOf="@+id/linearLayoutText" />
+
 
 
 </RelativeLayout>

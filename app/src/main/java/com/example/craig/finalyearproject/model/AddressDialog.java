@@ -3,13 +3,16 @@ package com.example.craig.finalyearproject.model;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
+import com.example.craig.finalyearproject.MapsActivity;
 import com.example.craig.finalyearproject.R;
 
 /**
@@ -42,7 +45,12 @@ public class AddressDialog extends AppCompatDialogFragment {
                         String lat = addLat.getText().toString();
                         String lon = addLon.getText().toString();
                         String code = addCode.getText().toString();
-                        listener.getTexts(Double.parseDouble(lat),Double.parseDouble(lon),code);
+                        try{
+                            listener.getTexts(Double.parseDouble(lat),Double.parseDouble(lon),code);
+                        }catch (Exception e){
+                            Toast.makeText(getContext(),"ERROR",Toast.LENGTH_LONG).show();
+
+                        }
                     }
                 });
         return builder.create();

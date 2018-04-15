@@ -82,7 +82,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, AddressDialog.AddressDialogListener, DirectionCallback {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, AddressDialog.AddressDialogListener, DirectionCallback{
     private int num = 0;
     private GoogleMap map;
     private Location mlocation;
@@ -158,7 +158,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .init();
     }
 
-
+    public void receivedData(){
+        Intent in = getIntent();
+        double lat = in.getDoubleExtra("lat",0.0);
+        double lon = in.getDoubleExtra("lon",0.0);
+        String code = in.getStringExtra("code");
+        setUpMyGeoLocation(lat,lon,code);
+    }
     public void setUpUserName() {
         email = UserID.getEmail().toLowerCase();
         //Query query = ref.child("UsernameInfo");
@@ -303,15 +309,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_menu_maps, menu);
+        MenuItem address = menu.findItem(R.id.action_address);
+
+        if(!email.equals("craigcormack2012@hotmail.com")){
+            address.setVisible(false);
+        }
+
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+
         checkListSize();
         map.clear();
         getCurrentLocation();
@@ -320,7 +330,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             finish();
         }
 
-        if (id == R.id.action_address) {
+        if (id == R.id.action_address){
             openDialog();
 
         }
@@ -410,7 +420,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void getTexts(double lat,double lon,String code) {
-        //Toast.makeText(this,address,Toast.LENGTH_LONG).show();
         setUpMyGeoLocation(lat,lon,code);
     }
 
@@ -458,7 +467,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void getPlaceOnMap(int position){
         map.clear();
-        //getCurrentLocation();
+        getCurrentLocation();
         PlaceInformation placeInformation = (PlaceInformation) cordinList.get(position);
         double mylat = placeInformation.getLat();
         double mylon = placeInformation.getLon();

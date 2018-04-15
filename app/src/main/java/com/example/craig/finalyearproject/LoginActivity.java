@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
@@ -74,7 +75,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void userLogin(){
-        String emailText = email.getText().toString().trim();
+        final String emailText = email.getText().toString().trim();
         String passwordText = password.getText().toString().trim();
 
         if (TextUtils.isEmpty(emailText)){
@@ -100,6 +101,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         progressDialog.dismiss();
+
                         if(task.isSuccessful()){
                             MapScreen();
                             //UploadScreen();
@@ -127,10 +129,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         finish();
     }
 
-    private void UploadScreen(){
-        startActivity(new Intent(this,UploadActivity.class));
-        finish();
-    }
 
 
 }

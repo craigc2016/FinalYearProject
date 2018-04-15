@@ -9,7 +9,7 @@
         app:showAsAction="always">
         <menu>
     <item android:id="@+id/action_fileUpload"
-        android:icon="@drawable/profile"
+        android:icon="@drawable/profilenew"
         android:title="@string/action_GoToFileUpload"
         android:orderInCategory="101"
         app:showAsAction="always"/>
@@ -17,25 +17,26 @@
     <item android:id="@+id/action_address"
         android:title="@string/action_address"
         android:orderInCategory="101"
-        app:showAsAction="never" />
+        app:showAsAction="never"
+        android:icon="@drawable/edit"/>
     <item android:id="@+id/action_5KM"
         android:title="@string/action_5KM"
-        android:icon="@drawable/mapicon"
+        android:icon="@drawable/map_icon"
         android:orderInCategory="101"
         app:showAsAction="always" />
     <item android:id="@+id/action_10KM"
         android:title="@string/action_10KM"
-        android:icon="@drawable/mapicon"
+        android:icon="@drawable/map_icon"
         android:orderInCategory="101"
         app:showAsAction="always" />
     <item android:id="@+id/action_15KM"
-        android:icon="@drawable/mapicon"
+        android:icon="@drawable/map_icon"
         android:title="@string/action_15KM"
         android:orderInCategory="101"
         app:showAsAction="always" />
     <item android:id="@+id/action_logout"
         android:title="@string/action_Logout"
-        android:icon="@drawable/logout"
+        android:icon="@drawable/logoutnew"
         android:orderInCategory="101"
         app:showAsAction="always" />
 

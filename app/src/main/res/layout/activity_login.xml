@@ -11,12 +11,11 @@
         android:id="@+id/editEmail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="33dp"
         android:ems="10"
         android:hint="Email"
         android:inputType="textEmailAddress"
-        android:layout_below="@+id/imageView"
-        android:layout_alignStart="@+id/txtMsg" />
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
 
     <EditText
         android:id="@+id/editPass"
@@ -24,7 +23,7 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:hint="Password"
-        android:layout_marginBottom="60dp"
+        android:layout_marginBottom="48dp"
         android:inputType="textPassword"
         android:layout_above="@+id/btnSignIn"
         android:layout_alignStart="@+id/editEmail" />
@@ -36,7 +35,7 @@
         android:text="Sign In"
         android:layout_marginBottom="34dp"
         android:layout_above="@+id/txtMsg"
-        android:layout_alignStart="@+id/txtMsg" />
+        android:layout_alignStart="@+id/editPass" />
 
     <Button
         android:id="@+id/btnClear"
@@ -53,16 +52,16 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="42dp"
-        android:text="Register Account"
-        android:textSize="24sp" />
+        android:text="Have no account register here"
+        android:textSize="14sp" />
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:layout_marginTop="55dp"
+        android:layout_marginTop="47dp"
         app:srcCompat="@drawable/common_full_open_on_phone"
         android:src="@drawable/foot"
         android:layout_alignParentTop="true"
-        android:layout_alignEnd="@+id/txtMsg" />
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>
