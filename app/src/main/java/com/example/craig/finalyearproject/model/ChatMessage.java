@@ -1,4 +1,4 @@
-package com.example.craig.finalyearproject;
+package com.example.craig.finalyearproject.model;
 
 import java.util.Date;
 

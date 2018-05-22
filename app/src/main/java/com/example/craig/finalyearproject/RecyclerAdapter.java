@@ -39,15 +39,11 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     private PlaceInformation info;
     private DatabaseReference ref;
     private MyNotifiy myNotifiy;
-    private ArrayList<MyNotifiy> notifications;
     private String username="";
     public RecyclerAdapter(ArrayList list,Context context, MapsActivity myMap) {
         this.list = list;
         this.context = context;
         MyMap = myMap;
-        this.notifications = new ArrayList<>();
-        //OSPermissionSubscriptionState status = OneSignal.getPermissionSubscriptionState();
-        //OneID = status.getSubscriptionStatus().getUserId();
     }
 
     @Override
@@ -97,18 +93,20 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 username = MyMap.getUserName();
                 myNotifiy = new MyNotifiy();
-                //Log.i("MYPOS", "POS" + position);
                 info = (PlaceInformation) list.get(holder.getAdapterPosition());
                 info.setChecked(isChecked);
                 myNotifiy.setSignUp(isChecked);
                 myNotifiy.setCompanyName(info.getCompanyName());
                 myNotifiy.isSignUp();
+                Log.i("MYNOT","" + myNotifiy);
                 ref.child(username).child(info.getCompanyName()).setValue(myNotifiy);
+
                 if(isChecked){
                     OneSignal.sendTag(info.getCompanyName(),"1");
                 }else {
                     OneSignal.deleteTag(info.getCompanyName());
                 }
+
             }
         });
     }

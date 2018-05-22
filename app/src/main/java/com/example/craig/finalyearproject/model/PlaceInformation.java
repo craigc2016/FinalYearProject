@@ -5,7 +5,6 @@ package com.example.craig.finalyearproject.model;
  */
 
 public class PlaceInformation {
-    private String key;
     private String openingHours;
     private String website;
     private String companyName;
@@ -14,9 +13,22 @@ public class PlaceInformation {
     private double lat;
     private double lon;
     private String photo;
-    private int position;
     private boolean isChecked;
     private String openNow;
+
+
+    public PlaceInformation(String openingHours, String website, String companyName, String phoneNum, String address, double lat, double lon, String photo, boolean isChecked, String openNow) {
+        this.openingHours = openingHours;
+        this.website = website;
+        this.companyName = companyName;
+        this.phoneNum = phoneNum;
+        this.address = address;
+        this.lat = lat;
+        this.lon = lon;
+        this.photo = photo;
+        this.isChecked = isChecked;
+        this.openNow = openNow;
+    }
 
     public String getOpenNow() {
         return openNow;
@@ -43,13 +55,7 @@ public class PlaceInformation {
     }
 
     public PlaceInformation(){}
-    public String getKey() {
-        return key;
-    }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
 
     public String getOpeningHours() {
         return openingHours;
@@ -99,13 +105,6 @@ public class PlaceInformation {
         this.photo = photo;
     }
 
-    public int getPosition() {
-        return position;
-    }
-
-    public void setPosition(int position) {
-        this.position = position;
-    }
 
     public boolean isChecked() {
         return isChecked;
@@ -117,6 +116,6 @@ public class PlaceInformation {
 
 
     public String toString(){
-        return "CompanyName : " + companyName + "Address : " + address + "PhoneNumber : " + phoneNum + "Website : " + website + "\nOpen : " + openNow + " OpeningHours " + openingHours;
+        return "CompanyName : " + companyName + "\nAddress : " + address + "\nPhoneNumber : " + phoneNum + "\nWebsite : " + website + "\nOpen : " + openNow + " OpeningHours " + openingHours;
     }
 }

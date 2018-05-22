@@ -57,8 +57,7 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
     private String email;
     private ArrayList<UsernameInfo> usernameInfos;
     private ArrayList<MyNotifiy> notifiyList;
-    private boolean flag;
-    UsernameInfo usernameInfo;
+    private UsernameInfo usernameInfo;
     private DatabaseReference user,notifiy;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +88,6 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
         progressDialog.setMessage("Uploading....");
         user = ref.child("UserName");
         notifiy = ref.child("Notifications");
-
         chooseImg.setOnClickListener(this);
         uploadImg.setOnClickListener(this);
         btnUser.setOnClickListener(this);
@@ -244,6 +242,7 @@ public class UploadActivity extends AppCompatActivity implements View.OnClickLis
      */
     public void UploadImage(){
         if(filePath != null){
+
             name = "placeholder";
             progressDialog.show();
             userRef = storageReference.child(UserID.getUid());

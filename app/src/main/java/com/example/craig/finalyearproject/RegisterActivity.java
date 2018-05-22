@@ -148,6 +148,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             //stopping the function execution further
             return;
         }
+
         UsernameInfo info;
         for (int i =0;i<list.size();i++){
             info = list.get(i);

@@ -1,12 +1,10 @@
 package com.example.craig.finalyearproject;
 import android.Manifest;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -16,13 +14,8 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+
 import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,7 +31,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.craig.finalyearproject.model.AddressDialog;
-import com.example.craig.finalyearproject.model.MyGeoLocation;
 import com.example.craig.finalyearproject.model.MyNotifiy;
 import com.example.craig.finalyearproject.model.PlaceInformation;
 import com.example.craig.finalyearproject.model.UsernameInfo;
@@ -65,27 +57,26 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.onesignal.OSNotificationAction;
-import com.onesignal.OSNotificationOpenResult;
 import com.onesignal.OneSignal;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
-
+/*
+This class is the main page for the app allowing for the user to interact with the map.
+It will allow for the user to choose the pitches to display depending on distance.
+It will then display each pitches information. It will allow for the map to draw a
+path from the users location to the pitch destinantion. It will allow for the user to navigate to
+the message page for that astro pitch.
+ */
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, AddressDialog.AddressDialogListener, DirectionCallback{
+    //Declare the variables for the class
     private int num = 0;
     private GoogleMap map;
-    private Location mlocation;
     private double lat;
     private double lon;
     private String currentPosName;
@@ -100,7 +91,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private double radius;
     private Toolbar toolbar;
     private FirebaseUser UserID;
-    private String imageName = "";
     private ImageView logo;
     private String url;
     private TextView title;
@@ -108,10 +98,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String email;
     private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place/details/json?";
     private static final String API_KEY = "AIzaSyAQU76H2D4U1xehhVGJqTUDTHhFO6ImEIs";
-    private PlaceInformation info;
-    private String placeDetails = "";
     private static final String SERVERKEY = "AIzaSyDhnV49D80UcbnguzDkXyyV1nQQsh97l1c";
-    //private LatLng origin = new LatLng(mlocation.getLatitude(), mlocation.getLongitude());
     private LatLng origin;
     private LatLng destination;
     private static final String IMAGE_NOT_FOUND = "https://gaygeekgab.files.wordpress.com/2015/05/wpid-photo-317.png";
@@ -122,35 +109,40 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayList<MyNotifiy> notifications;
     private DatabaseReference notificationsRef;
     private MyNotifiy myNotifiy;
-    //PlaceInformation place;
-    //private ArrayList<MyGeoLocation>myLocations;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        SupportMapFragment mapFragment = (SupportMapFragment)
+                getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        //listView = (ListView) findViewById(R.id.list);
+        //reference to recycler view and set layout
         recyclerView = (RecyclerView) findViewById(R.id.recycle);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        //declare the array lists
         cordinList = new ArrayList();
         notifications = new ArrayList<>();
+        notifications = new ArrayList<>();
+        //get instance of the storage and database
         firebaseStorage = FirebaseStorage.getInstance();
         firebaseDatabase = FirebaseDatabase.getInstance();
-        storageReference = firebaseStorage.getReferenceFromUrl("gs://finalyearproject-894cb.appspot.com");
         database = FirebaseDatabase.getInstance();
+        //get references to the instances gained for firebase functions
+        storageReference = firebaseStorage.getReferenceFromUrl("gs://finalyearproject-894cb.appspot.com");
         ref = database.getReference();
-        notificationsRef = FirebaseDatabase.getInstance().getReference("Notifications");
         UserID = FirebaseAuth.getInstance().getCurrentUser();
         userRef = storageReference.child(UserID.getUid());
+        notificationsRef = FirebaseDatabase.getInstance().getReference("Notifications");
+
+        //get reference to location provider
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        notifications = new ArrayList<>();
+
         setUpUserName();
         setImageForToolBar();
         initToolBar();
+        //register device with One Signal
         OneSignal.startInit(this)
                 .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
                 .setNotificationOpenedHandler(new MyNotificationOpenedHandler(getApplication()))
@@ -158,13 +150,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .init();
     }
 
-    public void receivedData(){
-        Intent in = getIntent();
-        double lat = in.getDoubleExtra("lat",0.0);
-        double lon = in.getDoubleExtra("lon",0.0);
-        String code = in.getStringExtra("code");
-        setUpMyGeoLocation(lat,lon,code);
-    }
+    /*
+    This method is used to get the username for the account that is
+    logged in. It checks the firebase database which holds the name.
+    It gets the email linked to the account from FirebaseAuth class.
+     */
     public void setUpUserName() {
         email = UserID.getEmail().toLowerCase();
         //Query query = ref.child("UsernameInfo");
@@ -188,29 +178,43 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
+    //Method used to get access to the username retrieved from the database
     public static String getUserName() {
         return UserName;
     }
 
+    /*
+    Method for to set the profile image for the account.
+    It gets a reference to FirebaseStorage class. It will retrieve
+    the image using uri. It will use the Picasso library to load and set the image.
+     */
     public void setImageForToolBar() {
         userRef.child("placeholder").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
                 try {
+                    //string reference to the path of storage
                     url = uri.toString();
-                    Picasso.with(MapsActivity.this).load(url).resize(100, 100).centerCrop().into(logo);
+                    Picasso.with(MapsActivity.this)
+                            .load(url)
+                            .resize(100, 100)
+                            .centerCrop()
+                            .into(logo);
                 } catch (Exception e) {
                     Toast.makeText(getApplication(), "Error while connecting to url" + url, Toast.LENGTH_LONG).show();
-                    return;
                 }
             }
         });
     }
 
+    /*
+    Method which sets up the toolbar getting access to
+    the imageview and textview. Which is the placeholder for
+    username and profile image.
+     */
     public void initToolBar() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        //Toast.makeText(this,"" + userRef.toString(),Toast.LENGTH_LONG).show();
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         toolbar.setTitle("");
         toolbar.setSubtitle("");
@@ -234,15 +238,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         getCurrentLocation();
     }
 
-
+    /*
+    This method will ask the user if the app can have access to the
+    device location. It will check the manifest file for the Location classes
+    needed.
+     */
     private void getCurrentLocation() {
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(getApplicationContext(), "Error permissions not granted", Toast.LENGTH_LONG).show();
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_LOCATION);
-        } else {
+        }
+        else {
+            /*
+            If the user has allowed for their location to be used previously.
+            It will display a marker on the map and navigate to that position.
+            It will use the FusedLocationProviderClient class for to get access to the
+            device location.
+             */
             mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
                 @Override
                 public void onSuccess(Location location) {
@@ -254,12 +269,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         lat = location.getLatitude();
                         lon = location.getLongitude();
                     }
+
                 }
             });
+
         }
 
     }
-
+    /*
+    This method is an implemented method for the check for a devices location.
+    It will handle the users decision made by the user to allow for their
+    devices location to be used.
+     */
     public void onRequestPermissionsResult(int requestCode,
                                            String[] permissions,
                                            int[] grantResults) {
@@ -267,7 +288,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (grantResults.length == 1
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // We can now safely use the API we requested access to
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED) {
                     mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
@@ -289,42 +311,32 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void moveMap() {
-        //Creating a LatLng Object to store Coordinates
-        LatLng latLng = new LatLng(lat, lon);
-
-        //Adding marker to map
-        map.addMarker(new MarkerOptions()
-                .position(latLng) //setting position
-                .draggable(true) //Making the marker draggable
-                .title(currentPosName)); //Adding a title
-
-        //Moving the camera
-        map.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        //Animating the camera
-        map.animateCamera(CameraUpdateFactory.zoomTo(15));
-    }
-
+    /*
+    Method which is implemented to allow for the settings
+    option in the tool bar.
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // Inflate the menu this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_menu_maps, menu);
         MenuItem address = menu.findItem(R.id.action_address);
-
+        //If statement used to check for email address which hides option in settings tab.
         if(!email.equals("craigcormack2012@hotmail.com")){
             address.setVisible(false);
         }
-
         return true;
     }
-
+    /*
+    Method which is implemented which handles the users input with the
+    settings tab.
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        checkListSize();
-        map.clear();
-        getCurrentLocation();
+        checkListSize(); // method call to check list size
+        map.clear(); // clears the markers on the map
+        getCurrentLocation(); // method call to get a users location on the map
         if(id == R.id.action_fileUpload){
             startActivity(new Intent(this,UploadActivity.class));
             finish();
@@ -349,10 +361,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(id == R.id.action_logout){
             finish();
         }
-
         return super.onOptionsItemSelected(item);
     }
 
+    /*
+    Method to check the firebase database for the users
+    notifications choices.
+     */
     private void getNotifications(){
         notificationsRef.child(UserName).addValueEventListener(new ValueEventListener() {
             @Override
@@ -360,36 +375,40 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 for (DataSnapshot ds : dataSnapshot.getChildren()){
                     MyNotifiy myNotifiy = ds.getValue(MyNotifiy.class);
                     notifications.add(myNotifiy);
-                    Log.i("REACHED","HELLO" + notifications);
                 }
             }
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
             }
         });
     }
-
+    /*
+    Method which sets up the location querying checking the
+    Firebase database and uses the Geo-fire library.
+     */
     private void setUpFireBase(){
         getNotifications();
+        //get a reference to the location in the database
         refGeo = firebaseDatabase.getReference("GeoLocations");
+        /*
+        Use Geo-fire library to query the location coordinates
+        in the Firebase database.
+         */
         GeoFire geoFire = new GeoFire(refGeo);
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(lat,lon),radius);
-        //arrayAdapter = new MyCustomAdapter(getBaseContext(),android.R.layout.simple_list_item_1,cordinList,MapsActivity.this);
-        //listView.setAdapter(arrayAdapter);
+        //Set up the recycler view component
         adapter = new RecyclerAdapter(cordinList,this,MapsActivity.this);
         recyclerView.setAdapter(adapter);
-        //String url = BASE_URL + "placeid=" + "ChIJN1t_tDeuEmsRUsoyG83frY4" + "&key=" + API_KEY;
-
-
+        /*
+        Method callback used to retrieve the locations within the
+        radius of the user.
+         */
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-
                 String url = BASE_URL + "placeid=" + key + "&key=" + API_KEY;
                 getPlaceInfo(url);
-
             }
 
             @Override
@@ -412,59 +431,45 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
     }
-
+    //Method used to display the dialog for entering locations to Firebase database.
     private void openDialog(){
         AddressDialog addressDialog = new AddressDialog();
         addressDialog.show(getSupportFragmentManager(),"Address Dialog");
     }
 
+    /*
+    Interface method used to retrive the details entered in the dialog.
+     */
     @Override
     public void getTexts(double lat,double lon,String code) {
         setUpMyGeoLocation(lat,lon,code);
     }
-
+    /*
+    Method used to get the value for the coordinates for a location
+    entered through the dialog. It sets the location as a Geo-fire location
+    tagging it with a special geo location object used for querying.
+     */
     public void setUpMyGeoLocation(double lat,double lon,String code){
-
         firebaseDatabase = FirebaseDatabase.getInstance();
         refGeo = firebaseDatabase.getReference("GeoLocations");
         GeoFire geoFire = new GeoFire(refGeo);
         geoFire.setLocation(code,new GeoLocation(lat, lon));
-        /*
-        Geocoder geocoder = new Geocoder(this);
-        if(geocoder.isPresent()){
-            try {
-                List<Address> addresses = geocoder.getFromLocation(lat,lon,0);
-                if(addresses.size() == 0){
-                    Toast.makeText(this,"Place not found",Toast.LENGTH_LONG).show();
-                    return;
-                }
-                Address address = addresses.get(0);
-                firebaseDatabase = FirebaseDatabase.getInstance();
-                refGeo = firebaseDatabase.getReference("GeoLocations");
-                GeoFire geoFire = new GeoFire(refGeo);
-                geoFire.setLocation(address.getPhone(), new GeoLocation(address.getLatitude(), address.getLongitude()));
-                for(int i=0;i<addresses.size();i++){
-                    Log.i("PLACES","" + addresses.get(i));
-                }
-            } catch (IOException e) {
-                Toast.makeText(this,"Network to geocoder not working",Toast.LENGTH_LONG).show();
-            }catch (IllegalArgumentException e){
-                Toast.makeText(this,"Network to geocoder not working",Toast.LENGTH_LONG).show();
-            }
-        }
-        else{
-            Toast.makeText(this,"No Place entered",Toast.LENGTH_LONG).show();
-        }
-        */
     }
-
+    /*
+    Method used to convert the string value of the
+    settings menu which the user uses to choose the
+    radius of to search in.
+     */
     private void setUpDoubleValue(String item){
         String newItem[];
         newItem = item.split("K",2);
         radius = Double.parseDouble(newItem[0].toString());
-        Log.i("RADIUS",""+radius);
     }
 
+    /*
+    This method is used to get the directions between the
+    user device and their chosen destination.
+     */
     public void getPlaceOnMap(int position){
         map.clear();
         getCurrentLocation();
@@ -474,21 +479,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         origin = new LatLng(lat,lon);
         destination = new LatLng(mylat,mylon);
         companyName = placeInformation.getCompanyName();
+        /*
+        This is an API which is used to get the location details
+        between the user and destination. It uses a third party library to
+        handle this.
+         */
         GoogleDirection.withServerKey(SERVERKEY)
                 .from(origin)
                 .to(destination)
                 .transitMode(TransportMode.WALKING)
                 .execute(this);
-
-        /*
-        line = map.addPolyline(new PolylineOptions()
-                .add(new LatLng(lat, lon), new LatLng(mlocation.getLatitude(), mlocation.getLongitude()))
-                .width(5)
-                .color(Color.RED));
-        moveMap();
-        */
     }
-
+    /*
+    Method used to check the ArrayList
+     */
     public void checkListSize(){
         if(cordinList.size()> 0){
             cordinList.clear();
@@ -496,18 +500,24 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
+    /*
+    Method which is used to retrieve the details for locations
+    from Google Places API. It will use the networking library volley
+    to make the requests. It will parse the returned JSON Objects.
+     */
     public void getPlaceInfo(String URL){
-
+        //Volley library request
        JsonObjectRequest jsonRequest = new JsonObjectRequest
                 (Request.Method.GET, URL, null, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        Log.i("MYJSONOBJ","" + response);
-
+                        //Create the model class object used to store the details returned
                         PlaceInformation place = new PlaceInformation();
+                        /*
+                        Parse the returned request JSON objects. This gives the
+                        details of each astro pitch.
+                         */
                         try{
-
                             JSONObject jsonObjRes = response.getJSONObject("result");
                             JSONObject geometry = jsonObjRes.getJSONObject("geometry");
                             JSONObject loc = geometry.getJSONObject("location");
@@ -524,7 +534,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 Log.i("ERRORI",photo);
                                 e.printStackTrace();
                             }
-
                             photo = photoObj.getString("photo_reference");
                             boolean openNow = jsonOpenHours.getBoolean("open_now");
                             String openNowStr = "";
@@ -533,7 +542,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }else {
                                 openNowStr = "NO";
                             }
-                            //Place Details
+                            //Create variables to store the astro pitch details
                             double lat = loc.getDouble("lat"),lon = loc.getDouble("lng");
                             String phoneNum = jsonObjRes.getString("formatted_phone_number");
                             String address = jsonObjRes.getString("formatted_address");
@@ -543,6 +552,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             for(int i =0;i<openingArray.length();i++){
                                 openHours += "\n" + openingArray.getString(i);
                             }
+                            //Set the fields of the model class
                             place.setLat(lat);
                             place.setLon(lon);
                             place.setCompanyName(name);
@@ -552,6 +562,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             place.setOpeningHours(openHours);
                             place.setPhoto(photo);
                             place.setOpenNow(openNowStr);
+                            /*
+                            Check the status of the notifications options.
+                            Then set the notifications action to the current model object.
+                             */
                             for (int i = 0;i<notifications.size();i++){
                                 myNotifiy = notifications.get(i);
                                 if(place.getCompanyName().equals(myNotifiy.getCompanyName())){
@@ -561,7 +575,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                             cordinList.add(place);
                             adapter.notifyDataSetChanged();
-                            Log.i("MYCORDIN",""+ place);
                         }catch (Exception e){
                             e.printStackTrace();
                         }
@@ -573,10 +586,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         error.printStackTrace();
                     }
                 });
+        //Make the volley request
         Volley.newRequestQueue(this).add(jsonRequest);
     }
 
-
+    /*
+    Implemented third party library which draws the path between
+    the user device and destination location. It will draw the maker along
+    the maps roads.
+     */
     @Override
     public void onDirectionSuccess(Direction direction, String rawBody) {
         if(direction.isOK()){
@@ -588,19 +606,27 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             setCameraWithCoordinationBounds(route);
         }
     }
-
+    /*
+    Implemented method which occurs for an error.
+     */
     @Override
     public void onDirectionFailure(Throwable t) {
         Toast.makeText(this,"ERROR OCCURED",Toast.LENGTH_LONG).show();
     }
-
+    /*
+    Method which is used to carry out the animation which zooms out the
+    map view.
+     */
     private void setCameraWithCoordinationBounds(Route route) {
         LatLng southwest = route.getBound().getSouthwestCoordination().getCoordination();
         LatLng northeast = route.getBound().getNortheastCoordination().getCoordination();
         LatLngBounds bounds = new LatLngBounds(southwest, northeast);
         map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
     }
-
+    /*
+    Implemented method used for when the app pauses
+    Does not allow for handing in the background.
+     */
     protected void onPause(){
         super.onPause();
         finish();

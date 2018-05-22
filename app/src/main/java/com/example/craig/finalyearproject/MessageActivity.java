@@ -18,7 +18,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.craig.finalyearproject.model.User;
+import com.example.craig.finalyearproject.model.ChatMessage;
 import com.example.craig.finalyearproject.model.UsernameInfo;
 import com.firebase.ui.database.FirebaseListAdapter;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -81,7 +81,7 @@ public class MessageActivity extends AppCompatActivity {
             public void onClick(View v) {
                 EditText text = (EditText) findViewById(R.id.msgInput);
                 FirebaseDatabase.getInstance().getReference().child("Messages").child(CompanyName).push()
-                        .setValue(new ChatMessage(text.getText().toString(), username));
+                        .setValue(new ChatMessage(text.getText().toString(), UserName));
                 String msg = text.getText().toString();
                 text.setText(" ");
                 new NotificationAsync(msg,CompanyName,username).execute();
@@ -102,7 +102,7 @@ public class MessageActivity extends AppCompatActivity {
 
                 // Set their text
                 messageText.setText(model.getMessageText());
-                messageUser.setText(UserName);
+                messageUser.setText(model.getMessageUser());
 
                 // Format the date before showing it
                 messageTime.setText(DateFormat.format("dd-MM-yyyy (HH:mm:ss)",
