@@ -518,6 +518,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         details of each astro pitch.
                          */
                         try{
+                            /*
+                            Create JSON objects to hold the returned details
+                             */
                             JSONObject jsonObjRes = response.getJSONObject("result");
                             JSONObject geometry = jsonObjRes.getJSONObject("geometry");
                             JSONObject loc = geometry.getJSONObject("location");
@@ -542,7 +545,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }else {
                                 openNowStr = "NO";
                             }
-                            //Create variables to store the astro pitch details
+                            /*
+                            Create variables to store the astro pitch details
+                             */
                             double lat = loc.getDouble("lat"),lon = loc.getDouble("lng");
                             String phoneNum = jsonObjRes.getString("formatted_phone_number");
                             String address = jsonObjRes.getString("formatted_address");
