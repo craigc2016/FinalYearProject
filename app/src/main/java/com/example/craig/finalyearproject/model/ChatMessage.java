@@ -3,18 +3,29 @@ package com.example.craig.finalyearproject.model;
 import java.util.Date;
 
 /**
- * Created by craig on 23/03/2018.
+ * This acts as the model class for the messages sent in
+ * the message page. It has instance variables that are set
+ * when an instance of the class is created and the fields
+ * are set. It will contain the getter and setter methods needed.
  */
 
 public class ChatMessage {
+    /**
+     * Declase the instance variables
+     */
     private String messageText;
     private String messageUser;
     private long messageTime;
 
+    /**
+     * Constructor which takes arguments and sets to
+     * instance variables of the class
+     * @param messageText
+     * @param messageUser
+     */
     public ChatMessage(String messageText, String messageUser) {
         this.messageText = messageText;
         this.messageUser = messageUser;
-
         // Initialize to current time
         messageTime = new Date().getTime();
     }

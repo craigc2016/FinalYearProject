@@ -1,7 +1,10 @@
 package com.example.craig.finalyearproject.model;
 
 /**
- * Created by craig on 23/02/2018.
+ *This class is used for the model of the data retrieved from the
+ * Google places Web service. It is used to populate the listview
+ * in the map page. It will use the getter and setter methods to set
+ * or get the instance variables values.
  */
 
 public class PlaceInformation {
@@ -17,18 +20,7 @@ public class PlaceInformation {
     private String openNow;
 
 
-    public PlaceInformation(String openingHours, String website, String companyName, String phoneNum, String address, double lat, double lon, String photo, boolean isChecked, String openNow) {
-        this.openingHours = openingHours;
-        this.website = website;
-        this.companyName = companyName;
-        this.phoneNum = phoneNum;
-        this.address = address;
-        this.lat = lat;
-        this.lon = lon;
-        this.photo = photo;
-        this.isChecked = isChecked;
-        this.openNow = openNow;
-    }
+    public PlaceInformation(){}
 
     public String getOpenNow() {
         return openNow;
@@ -53,9 +45,6 @@ public class PlaceInformation {
     public void setLon(double lon) {
         this.lon = lon;
     }
-
-    public PlaceInformation(){}
-
 
     public String getOpeningHours() {
         return openingHours;

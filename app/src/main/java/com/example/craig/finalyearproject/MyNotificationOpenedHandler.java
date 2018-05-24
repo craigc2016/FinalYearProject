@@ -27,18 +27,26 @@ public class MyNotificationOpenedHandler implements OneSignal.NotificationOpened
         this.application = application;
     }
     /*
-    Implemented method which checks for the users input of clicking t
+    Implemented method which checks for the users input of clicking the notification delivered
+    It will extract values from the payload and assign to variables
      */
     @Override
     public void notificationOpened(OSNotificationOpenResult result) {
+        //JSON object which contains data carried by notification username, pitch name
         JSONObject data = result.notification.payload.additionalData;
         companyName = data.optString("tag");
         username = data.optString("tag1");
         if (data != null) {
+            //Method call to carry out action when data payload is not null
             startApp();
         }
 
     }
+
+    /*
+    Method which is code executed when user clicks on the notification
+    sent to their device
+     */
     private void startApp() {
         Intent intent = new Intent(application, MessageActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);

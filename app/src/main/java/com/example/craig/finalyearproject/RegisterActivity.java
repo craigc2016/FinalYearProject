@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,7 +17,6 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.UserInfo;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -28,6 +26,12 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
+/**
+ * This class is for handling the registering of the accounts with
+ * the App using the FirebaseAuth. The user will enter a valid username, email and password.
+ * The validation will be carried out and relevent error message
+ * displayed in the encounter of an error.
+ */
 public class RegisterActivity extends AppCompatActivity implements View.OnClickListener {
     private ArrayList<UsernameInfo> list = new ArrayList<>();
     private EditText email,password,username;
@@ -48,11 +52,6 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         database = FirebaseDatabase.getInstance();
         ref = database.getReference();
         userNameRef = ref.child("UserName");
-        /*
-         */
-        if(firebaseAuth != null){
-            //HomeScreen();
-        }
 
         //Get references to the UI components
         username = (EditText) findViewById(R.id.editUserName);
@@ -74,7 +73,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
 
     }
 
-    /*
+    /**
     Implemented method that handle the user input with buttons
     and the text in the layout.
      */
@@ -94,7 +93,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         }
     }
 
-    /*
+    /**
     This method downloads the usernames stored in the
     firebase database. So when a user chooses a username it makes
     sure it does not clash with one already in use.
@@ -116,7 +115,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         });
     }
 
-    /*
+    /**
     This method is used fot the register functionality of the app.
     It takes the user information from the textfields. It then checks
     the usernames list to check if one is in use. If so it will then
@@ -148,7 +147,11 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             //stopping the function execution further
             return;
         }
-
+        /**
+         * Loop used to check if the username entered is already
+         * in use. If so display an error message and allow for
+         * the user to re-enter.
+         */
         UsernameInfo info;
         for (int i =0;i<list.size();i++){
             info = list.get(i);
@@ -165,7 +168,10 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         progressDialog.setMessage("Registering User...");
         progressDialog.show();
 
-
+        /**
+         * This is where a reference to the FirebaseAuth class is
+         * attached with an onComplete listener to register the user
+         */
         firebaseAuth.createUserWithEmailAndPassword(emailText,passwordText)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -186,12 +192,19 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                 });
     }
 
+    /**
+     * Method used to not allow the progress
+     * dialog to hang in the background
+     */
     protected void onPause(){
         super.onPause();
         progressDialog.dismiss();
     }
 
-
+    /**
+     * Method which is called when the
+     * user needs to start the login activity
+     */
     private void LoginScreen(){
         startActivity(new Intent(this,LoginActivity.class));
         finish();

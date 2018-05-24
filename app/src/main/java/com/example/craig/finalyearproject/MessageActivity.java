@@ -37,7 +37,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Scanner;
-/*
+/**
 This class is for the handling of the messaging feature in the App.
 It will create the references needed to connect to the Firebase database which
 is used to hold the messages and serve them to users of the App. It will also handle
@@ -247,7 +247,7 @@ public class MessageActivity extends AppCompatActivity {
 
 }//end class
 
-/*
+/**
 Inner class which contains mostly boiler plate code given by One Signal needed
 to send the notifications to registered Users.
  */

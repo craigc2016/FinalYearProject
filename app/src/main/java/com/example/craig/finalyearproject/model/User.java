@@ -1,7 +1,8 @@
 package com.example.craig.finalyearproject.model;
 
 /**
- * Created by craig on 26/11/2017.
+ * *This class is used for to model the imgae retrived from
+ * the users device using the setter and getter methods.
  */
 
 public class User {

@@ -65,7 +65,7 @@ import org.json.JSONObject;
 
 
 import java.util.ArrayList;
-/*
+/**
 This class is the main page for the app allowing for the user to interact with the map.
 It will allow for the user to choose the pitches to display depending on distance.
 It will then display each pitches information. It will allow for the map to draw a

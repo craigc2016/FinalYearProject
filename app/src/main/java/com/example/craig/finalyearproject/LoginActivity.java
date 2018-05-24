@@ -2,16 +2,13 @@ package com.example.craig.finalyearproject;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,9 +16,15 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.storage.UploadTask;
+
+/**
+ * This class is for the login feature of the App. It will allow the user to
+ * enter their email and password to get access to the App. It will validate input
+ * from the users and compare to the FirebaseAuth class.
+ */
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
+    //Declare variables for the class
     private EditText email;
     private EditText password;
     private Button signIn;
@@ -115,17 +118,25 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 });
 
     }
-
+    /*
+    Implemented method which stops the progress dialog from
+    hanging in the background
+     */
     protected void onPause(){
         super.onPause();
         progressDialog.dismiss();
     }
 
+    /*
+    Method which holds code to access the register page
+     */
     private void RegisterScreen(){
         startActivity(new Intent(this,RegisterActivity.class));
         finish();
     }
-
+    /*
+    Method which holds code to access the Map page
+     */
     private void MapScreen(){
         startActivity(new Intent(this,MapsActivity.class));
         finish();

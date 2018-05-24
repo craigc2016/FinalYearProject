@@ -1,18 +1,13 @@
 package com.example.craig.finalyearproject.model;
 
 /**
- * Created by craig on 30/03/2018.
+ * This is a model class which is used for the states
+ * of the notification widgets to be set using the setter
+ * methdos. The getter methods allow for the notification state
+ * to be retrieved.
  */
 
 public class MyNotifiy {
-    @Override
-    public String toString() {
-        return "MyNotifiy{" +
-                "signUp=" + signUp +
-                ", companyName='" + companyName + '\'' +
-                '}';
-    }
-
     boolean signUp;
     String companyName;
 
@@ -32,5 +27,13 @@ public class MyNotifiy {
 
     public void setSignUp(boolean signUp) {
         this.signUp = signUp;
+    }
+
+    @Override
+    public String toString() {
+        return "MyNotifiy{" +
+                "signUp=" + signUp +
+                ", companyName='" + companyName + '\'' +
+                '}';
     }
 }

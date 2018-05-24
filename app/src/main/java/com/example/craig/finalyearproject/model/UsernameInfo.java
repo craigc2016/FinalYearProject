@@ -1,7 +1,10 @@
 package com.example.craig.finalyearproject.model;
 
 /**
- * Created by craig on 11/12/2017.
+ * This is a model class used to set the account settings
+ * for the users using the email and username stored in the
+ * database. The email acts as a primary key and username is
+ * the information for which to retrieve.
  */
 
 public class UsernameInfo {
